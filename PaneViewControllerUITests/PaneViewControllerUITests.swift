@@ -20,7 +20,7 @@ class PaneViewControllerUITests: XCTestCase {
     
     func testPrimaryAndSecondaryViewsAppearInRegularHorizontal() {
         let app = XCUIApplication()
-        if app.horizontalSizeClass == .Regular {
+        if app.windows.elementBoundByIndex(0).horizontalSizeClass == .Regular {
             XCTAssertTrue(app.staticTexts["Primary View"].exists)
             XCTAssertTrue(app.staticTexts["Secondary View"].exists)
         }
@@ -28,9 +28,23 @@ class PaneViewControllerUITests: XCTestCase {
     
     func testOnlyPrimaryViewAppearsInCompactHorizontal() {
         let app = XCUIApplication()
-        if app.horizontalSizeClass == .Compact {
+        if app.windows.elementBoundByIndex(0).horizontalSizeClass == .Compact {
             XCTAssertTrue(app.staticTexts["Primary View"].exists)
             XCTAssertFalse(app.staticTexts["Secondary View"].exists)
+        }
+    }
+    
+    func testShowHideModalInCompact() {
+        let app = XCUIApplication()
+        if app.windows.elementBoundByIndex(0).horizontalSizeClass == .Compact {
+            XCTAssertTrue(app.staticTexts["Primary View"].hittable)
+            app.buttons["Show"].tap()
+            // Now it should show the Secondary View over the Primary
+            XCTAssertFalse(app.staticTexts["Primary View"].hittable)
+            XCTAssertTrue(app.staticTexts["Secondary View"].hittable)
+            // Now close the drawer
+            app.buttons["X"].tap()
+            XCTAssertTrue(app.staticTexts["Primary View"].hittable)
         }
     }
     

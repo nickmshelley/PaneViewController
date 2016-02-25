@@ -14,8 +14,22 @@ class PaneViewController: UIViewController {
     let secondaryViewController: UIViewController
     
     private let defaultSideBySideWidthOfSecondaryView = CGFloat(320)
+    
+    private var secondaryViewSideContainerWidthConstraint: NSLayoutConstraint?
+    private var secondaryViewModalContainerLeadingConstraint: NSLayoutConstraint?
 
-    private var secondaryViewWidthConstraint: NSLayoutConstraint?
+    private lazy var secondaryViewSideContainerView: UIView = {
+        let containerView = UIView()
+        containerView.frame = self.view.bounds
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        return containerView
+    }()
+    private lazy var secondaryViewModalContainerView: UIView = {
+        let containerView = UIView()
+        containerView.frame = self.view.bounds
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        return containerView
+    }()
     
     init(primaryViewController: UIViewController, secondaryViewController: UIViewController) {
         self.primaryViewController = primaryViewController
@@ -38,26 +52,75 @@ class PaneViewController: UIViewController {
         primaryViewController.didMoveToParentViewController(self)
         
         addChildViewController(secondaryViewController)
-        secondaryViewController.view.frame = view.bounds
-        secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(secondaryViewController.view)
         secondaryViewController.didMoveToParentViewController(self)
         
-        let views = ["primaryView": primaryViewController.view, "secondaryView": secondaryViewController.view]
-        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryView]|", options: [], metrics: nil, views: views))
+        view.addSubview(secondaryViewSideContainerView)
+        
+        view.addSubview(secondaryViewModalContainerView)
+        
+        let views = ["primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView]
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
-        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
-
-        let startingWidth = view.traitCollection.horizontalSizeClass == .Regular ? defaultSideBySideWidthOfSecondaryView : 0
-        let secondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewController.view, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: startingWidth)
-        secondaryViewController.view.addConstraint(secondaryViewWidthConstraint)
-        self.secondaryViewWidthConstraint = secondaryViewWidthConstraint
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
+        
+        let secondaryViewSideContainerWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 0)
+        secondaryViewSideContainerView.addConstraint(secondaryViewSideContainerWidthConstraint)
+        self.secondaryViewSideContainerWidthConstraint = secondaryViewSideContainerWidthConstraint
+        
+        view.addConstraint(NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Width, relatedBy: .Equal, toItem: view, attribute: .Width, multiplier: 1, constant: 0))
+        let secondaryViewModalContainerLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Leading, relatedBy: .Equal, toItem: view, attribute: .Leading, multiplier: 1, constant: view.bounds.width)
+        view.addConstraint(secondaryViewModalContainerLeadingConstraint)
+        self.secondaryViewModalContainerLeadingConstraint = secondaryViewModalContainerLeadingConstraint
+        
+        updateSecondaryViewLocationForTraitCollection(traitCollection)
     }
     
     override func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         super.willTransitionToTraitCollection(newCollection, withTransitionCoordinator: coordinator)
         
-        secondaryViewWidthConstraint?.constant = newCollection.horizontalSizeClass == .Regular ? defaultSideBySideWidthOfSecondaryView : 0
+        updateSecondaryViewLocationForTraitCollection(newCollection)
+    }
+    
+    // MARK: Methods
+    
+    override func showSecondaryViewModallyAnimated(animated: Bool) {
+        guard view.traitCollection.horizontalSizeClass == .Compact && secondaryViewModalContainerLeadingConstraint?.constant != 0 else { return }
+        
+        secondaryViewModalContainerLeadingConstraint?.constant = 0
+        
+        UIView.animateWithDuration(animated ? 0.3 : 0) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    override func dismissModalSecondaryViewAnimated(animated: Bool) {
+        guard view.traitCollection.horizontalSizeClass == .Compact && secondaryViewModalContainerLeadingConstraint?.constant == 0 else { return }
+        
+        secondaryViewModalContainerLeadingConstraint?.constant = view.bounds.width
+        
+        UIView.animateWithDuration(animated ? 0.3 : 0) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
+        switch traitCollection.horizontalSizeClass {
+        case .Regular:
+            // Hide the modal if it was showing
+            dismissModalSecondaryViewAnimated(false)
+            
+            secondaryViewController.view.frame = secondaryViewSideContainerView.bounds
+            secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = true
+            secondaryViewSideContainerWidthConstraint?.constant = defaultSideBySideWidthOfSecondaryView
+            secondaryViewSideContainerView.addSubview(secondaryViewController.view)
+        case .Compact, .Unspecified:
+            secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
+            secondaryViewSideContainerWidthConstraint?.constant = 0
+            secondaryViewController.view.frame = view.bounds
+            secondaryViewModalContainerView.addSubview(secondaryViewController.view)
+        }
     }
     
 }

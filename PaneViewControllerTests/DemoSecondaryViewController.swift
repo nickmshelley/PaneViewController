@@ -15,7 +15,13 @@ class DemoSecondaryViewController: UIViewController {
         
         title = "Secondary View"
 
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "X", style: .Plain, target: self, action: "hideSecondaryView")
+        
         view.backgroundColor = UIColor.redColor()
+    }
+    
+    func hideSecondaryView() {
+        dismissModalSecondaryViewAnimated(true)
     }
     
 }
