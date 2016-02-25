@@ -15,7 +15,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         window = UIWindow(frame: UIScreen.mainScreen().bounds)
-        window?.rootViewController = PaneViewController(primaryViewController: DemoPrimaryViewController())
+        let primaryNavigationController = UINavigationController(rootViewController: DemoPrimaryViewController())
+        let secondaryNavigationController = UINavigationController(rootViewController: DemoSecondaryViewController())
+        window?.rootViewController = PaneViewController(primaryViewController: primaryNavigationController, secondaryViewController: secondaryNavigationController)
         window?.makeKeyAndVisible()
         
         return true

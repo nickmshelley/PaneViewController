@@ -18,9 +18,20 @@ class PaneViewControllerUITests: XCTestCase {
         XCUIApplication().launch()
     }
     
-    func testPrimaryViewAppears() {
+    func testPrimaryAndSecondaryViewsAppearInRegularHorizontal() {
         let app = XCUIApplication()
-        XCTAssertTrue(app.staticTexts["Primary View"].exists)
+        if app.horizontalSizeClass == .Regular {
+            XCTAssertTrue(app.staticTexts["Primary View"].exists)
+            XCTAssertTrue(app.staticTexts["Secondary View"].exists)
+        }
+    }
+    
+    func testOnlyPrimaryViewAppearsInCompactHorizontal() {
+        let app = XCUIApplication()
+        if app.horizontalSizeClass == .Compact {
+            XCTAssertTrue(app.staticTexts["Primary View"].exists)
+            XCTAssertFalse(app.staticTexts["Secondary View"].exists)
+        }
     }
     
 }

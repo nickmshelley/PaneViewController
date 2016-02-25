@@ -13,8 +13,10 @@ class PaneViewControllerTests: XCTestCase {
     
     func testAddingPrimaryViewControllerInInit() {
         let demoPrimaryViewController = DemoPrimaryViewController()
-        let paneViewController = PaneViewController(primaryViewController: demoPrimaryViewController)
+        let demoSecondaryViewController = DemoSecondaryViewController()
+        let paneViewController = PaneViewController(primaryViewController: demoPrimaryViewController, secondaryViewController: demoSecondaryViewController)
         XCTAssertEqual(paneViewController.primaryViewController, demoPrimaryViewController)
+        XCTAssertEqual(paneViewController.secondaryViewController, demoSecondaryViewController)
     }
     
 }

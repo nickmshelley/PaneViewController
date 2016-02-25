@@ -15,6 +15,7 @@
 		ECA3328A1C7F6749008D5F42 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ECA332851C7F6749008D5F42 /* Info.plist */; };
 		ECA3328E1C7F6771008D5F42 /* PaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3328D1C7F6771008D5F42 /* PaneViewController.swift */; };
 		ECA332901C7F69B0008D5F42 /* DemoPrimaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3328F1C7F69B0008D5F42 /* DemoPrimaryViewController.swift */; };
+		ECA332921C7F7D89008D5F42 /* DemoSecondaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA332911C7F7D89008D5F42 /* DemoSecondaryViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +50,7 @@
 		ECA332851C7F6749008D5F42 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = PaneViewControllerDemo/Info.plist; sourceTree = SOURCE_ROOT; };
 		ECA3328D1C7F6771008D5F42 /* PaneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PaneViewController.swift; path = PaneViewController/PaneViewController.swift; sourceTree = "<group>"; };
 		ECA3328F1C7F69B0008D5F42 /* DemoPrimaryViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoPrimaryViewController.swift; sourceTree = "<group>"; };
+		ECA332911C7F7D89008D5F42 /* DemoSecondaryViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoSecondaryViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -118,12 +120,12 @@
 		ECA3327E1C7F672E008D5F42 /* PaneViewControllerDemo */ = {
 			isa = PBXGroup;
 			children = (
+				ECA332931C7F7F00008D5F42 /* ViewControllers */,
 				ECA332801C7F6749008D5F42 /* AppDelegate.swift */,
 				ECA332811C7F6749008D5F42 /* Assets.xcassets */,
 				ECA332831C7F6749008D5F42 /* LaunchScreen.storyboard */,
 				ECA332851C7F6749008D5F42 /* Info.plist */,
 				ECA3327F1C7F6748008D5F42 /* PaneViewController-Bridging-Header.h */,
-				ECA3328F1C7F69B0008D5F42 /* DemoPrimaryViewController.swift */,
 			);
 			name = PaneViewControllerDemo;
 			path = PaneViewControllerTests;
@@ -135,6 +137,15 @@
 				ECA3328D1C7F6771008D5F42 /* PaneViewController.swift */,
 			);
 			name = PaneViewController;
+			sourceTree = "<group>";
+		};
+		ECA332931C7F7F00008D5F42 /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				ECA3328F1C7F69B0008D5F42 /* DemoPrimaryViewController.swift */,
+				ECA332911C7F7D89008D5F42 /* DemoSecondaryViewController.swift */,
+			);
+			name = ViewControllers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -286,6 +297,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ECA332921C7F7D89008D5F42 /* DemoSecondaryViewController.swift in Sources */,
 				ECA332901C7F69B0008D5F42 /* DemoPrimaryViewController.swift in Sources */,
 				ECA3328E1C7F6771008D5F42 /* PaneViewController.swift in Sources */,
 				ECA332871C7F6749008D5F42 /* AppDelegate.swift in Sources */,

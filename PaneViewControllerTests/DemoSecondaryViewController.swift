@@ -1,5 +1,5 @@
 //
-//  DemoPrimaryViewController.swift
+//  DemoSecondaryViewController.swift
 //  PaneViewController
 //
 //  Created by Branden Russell on 2/25/16.
@@ -8,14 +8,14 @@
 
 import UIKit
 
-class DemoPrimaryViewController: UIViewController {
+class DemoSecondaryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = "Primary View"
-        
-        view.backgroundColor = UIColor.greenColor()
+        title = "Secondary View"
+
+        view.backgroundColor = UIColor.redColor()
     }
     
 }
