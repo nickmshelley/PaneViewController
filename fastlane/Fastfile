@@ -1,0 +1,14 @@
+fastlane_version "1.42.0"
+default_platform :ios
+
+import_from_git(url: "https://github.com/LDSChurch/Fastlane-iOS/")
+
+platform :ios do
+
+  desc "Run Unit and UI Tests"
+  lane :test do
+    xcodebuild(scheme: "PaneViewController", project: "PaneViewController.xcodeproj", sdk: "iphonesimulator", xcargs: "test -destination 'platform=iOS Simulator,name=iPhone 5'")
+    xcodebuild(scheme: "PaneViewController", project: "PaneViewController.xcodeproj", sdk: "iphonesimulator", xcargs: "test -destination 'platform=iOS Simulator,name=iPad 2'")
+  end
+
+end
