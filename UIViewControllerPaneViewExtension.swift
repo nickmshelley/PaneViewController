@@ -10,19 +10,19 @@ import UIKit
 
 protocol PaneViewControllerProtocol {
     
-    func showSecondaryViewModallyAnimated(animated: Bool)
-    func dismissModalSecondaryViewAnimated(animated: Bool)
+    func showSecondaryViewAnimated(animated: Bool)
+    func dismissSecondaryViewAnimated(animated: Bool)
     
 }
 
 extension UIViewController: PaneViewControllerProtocol {
     
-    func showSecondaryViewModallyAnimated(animated: Bool) {
-        parentViewController?.showSecondaryViewModallyAnimated(animated)
+    func showSecondaryViewAnimated(animated: Bool) {
+        parentViewController?.showSecondaryViewAnimated(animated)
     }
     
-    func dismissModalSecondaryViewAnimated(animated: Bool) {
-        parentViewController?.dismissModalSecondaryViewAnimated(animated)
+    func dismissSecondaryViewAnimated(animated: Bool) {
+        parentViewController?.dismissSecondaryViewAnimated(animated)
     }
     
 }

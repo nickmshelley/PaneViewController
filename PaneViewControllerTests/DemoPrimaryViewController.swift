@@ -21,7 +21,7 @@ class DemoPrimaryViewController: UIViewController {
     }
     
     func showSecondaryView() {
-        showSecondaryViewModallyAnimated(true)
+        showSecondaryViewAnimated(true)
     }
     
 }

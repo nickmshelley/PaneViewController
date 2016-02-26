@@ -96,22 +96,28 @@ class PaneViewController: UIViewController {
     
     // MARK: Methods
     
-    override func showSecondaryViewModallyAnimated(animated: Bool) {
-        guard view.traitCollection.horizontalSizeClass == .Compact else { return }
-        
-        secondaryViewModalContainerHiddenLeadingConstraint?.active = false
-        secondaryViewModalContainerShowingLeadingConstraint?.active = true
+    override func showSecondaryViewAnimated(animated: Bool) {
+        switch traitCollection.horizontalSizeClass {
+        case .Regular:
+            secondaryViewSideContainerWidthConstraint?.constant = defaultSideBySideWidthOfSecondaryView
+        case .Compact, .Unspecified:
+            secondaryViewModalContainerHiddenLeadingConstraint?.active = false
+            secondaryViewModalContainerShowingLeadingConstraint?.active = true
+        }
         
         UIView.animateWithDuration(animated ? 0.3 : 0) {
             self.view.layoutIfNeeded()
         }
     }
     
-    override func dismissModalSecondaryViewAnimated(animated: Bool) {
-        guard view.traitCollection.horizontalSizeClass == .Compact else { return }
-        
-        secondaryViewModalContainerHiddenLeadingConstraint?.active = true
-        secondaryViewModalContainerShowingLeadingConstraint?.active = false
+    override func dismissSecondaryViewAnimated(animated: Bool) {
+        switch traitCollection.horizontalSizeClass {
+        case .Regular:
+            secondaryViewSideContainerWidthConstraint?.constant = 0
+        case .Compact, .Unspecified:
+            secondaryViewModalContainerHiddenLeadingConstraint?.active = true
+            secondaryViewModalContainerShowingLeadingConstraint?.active = false
+        }
         
         UIView.animateWithDuration(animated ? 0.3 : 0) {
             self.view.layoutIfNeeded()
@@ -119,22 +125,19 @@ class PaneViewController: UIViewController {
     }
     
     func shadowButtonTapped() {
-        dismissModalSecondaryViewAnimated(true)
+        dismissSecondaryViewAnimated(true)
     }
     
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
+        dismissSecondaryViewAnimated(false)
+        
         switch traitCollection.horizontalSizeClass {
         case .Regular:
-            // Hide the modal if it was showing
-            dismissModalSecondaryViewAnimated(false)
-            
             secondaryViewController.view.frame = secondaryViewSideContainerView.bounds
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = true
-            secondaryViewSideContainerWidthConstraint?.constant = defaultSideBySideWidthOfSecondaryView
             secondaryViewSideContainerView.addSubview(secondaryViewController.view)
         case .Compact, .Unspecified:
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
-            secondaryViewSideContainerWidthConstraint?.constant = 0
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
             
             let views = ["secondaryView": secondaryViewController.view, "shadowButton": modalShadowCloseButton]
