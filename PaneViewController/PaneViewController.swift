@@ -30,6 +30,13 @@ class PaneViewController: UIViewController {
         containerView.translatesAutoresizingMaskIntoConstraints = false
         return containerView
     }()
+    private lazy var modalShadowCloseButton: UIButton = {
+        let shadowButton = UIButton()
+        shadowButton.addTarget(self, action: "shadowButtonTapped", forControlEvents: .TouchUpInside)
+        shadowButton.backgroundColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1)
+        shadowButton.translatesAutoresizingMaskIntoConstraints = false
+        return shadowButton
+    }()
     
     init(primaryViewController: UIViewController, secondaryViewController: UIViewController) {
         self.primaryViewController = primaryViewController
@@ -74,6 +81,8 @@ class PaneViewController: UIViewController {
         view.addConstraint(secondaryViewModalContainerLeadingConstraint)
         self.secondaryViewModalContainerLeadingConstraint = secondaryViewModalContainerLeadingConstraint
         
+        secondaryViewModalContainerView.addSubview(modalShadowCloseButton)
+        
         updateSecondaryViewLocationForTraitCollection(traitCollection)
     }
     
@@ -105,6 +114,10 @@ class PaneViewController: UIViewController {
         }
     }
     
+    func shadowButtonTapped() {
+        dismissModalSecondaryViewAnimated(true)
+    }
+    
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
         switch traitCollection.horizontalSizeClass {
         case .Regular:
@@ -118,8 +131,13 @@ class PaneViewController: UIViewController {
         case .Compact, .Unspecified:
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
             secondaryViewSideContainerWidthConstraint?.constant = 0
-            secondaryViewController.view.frame = view.bounds
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
+            
+            let views = ["secondaryView": secondaryViewController.view, "shadowButton": modalShadowCloseButton]
+            secondaryViewModalContainerView.removeConstraints(modalShadowCloseButton.constraints)
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[shadowButton(==24)][secondaryView]|", options: [], metrics: nil, views: views))
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[shadowButton]|", options: [], metrics: nil, views: views))
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
         }
     }
     
