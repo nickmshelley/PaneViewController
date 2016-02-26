@@ -21,13 +21,11 @@ class PaneViewController: UIViewController {
 
     private lazy var secondaryViewSideContainerView: UIView = {
         let containerView = UIView()
-        containerView.frame = self.view.bounds
         containerView.translatesAutoresizingMaskIntoConstraints = false
         return containerView
     }()
     private lazy var secondaryViewModalContainerView: UIView = {
         let containerView = UIView()
-        containerView.frame = self.view.bounds
         containerView.translatesAutoresizingMaskIntoConstraints = false
         return containerView
     }()
