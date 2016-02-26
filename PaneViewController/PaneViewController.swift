@@ -16,7 +16,8 @@ class PaneViewController: UIViewController {
     private let defaultSideBySideWidthOfSecondaryView = CGFloat(320)
     
     private var secondaryViewSideContainerWidthConstraint: NSLayoutConstraint?
-    private var secondaryViewModalContainerLeadingConstraint: NSLayoutConstraint?
+    private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
+    private var secondaryViewModalContainerShowingLeadingConstraint: NSLayoutConstraint?
 
     private lazy var secondaryViewSideContainerView: UIView = {
         let containerView = UIView()
@@ -65,9 +66,9 @@ class PaneViewController: UIViewController {
         
         view.addSubview(secondaryViewModalContainerView)
         
-        let views = ["primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView]
+        let views = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView]
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
-        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("[secondaryViewModalContainerView(==view)]", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
@@ -76,10 +77,13 @@ class PaneViewController: UIViewController {
         secondaryViewSideContainerView.addConstraint(secondaryViewSideContainerWidthConstraint)
         self.secondaryViewSideContainerWidthConstraint = secondaryViewSideContainerWidthConstraint
         
-        view.addConstraint(NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Width, relatedBy: .Equal, toItem: view, attribute: .Width, multiplier: 1, constant: 0))
-        let secondaryViewModalContainerLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Leading, relatedBy: .Equal, toItem: view, attribute: .Leading, multiplier: 1, constant: view.bounds.width)
-        view.addConstraint(secondaryViewModalContainerLeadingConstraint)
-        self.secondaryViewModalContainerLeadingConstraint = secondaryViewModalContainerLeadingConstraint
+        let secondaryViewModalContainerHiddenLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Leading, relatedBy: .Equal, toItem: view, attribute: .Trailing, multiplier: 1, constant: 0)
+        let secondaryViewModalContainerShowingLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Leading, relatedBy: .Equal, toItem: view, attribute: .Leading, multiplier: 1, constant: 0)
+        view.addConstraint(secondaryViewModalContainerHiddenLeadingConstraint)
+        view.addConstraint(secondaryViewModalContainerShowingLeadingConstraint)
+        secondaryViewModalContainerShowingLeadingConstraint.active = false
+        self.secondaryViewModalContainerHiddenLeadingConstraint = secondaryViewModalContainerHiddenLeadingConstraint
+        self.secondaryViewModalContainerShowingLeadingConstraint = secondaryViewModalContainerShowingLeadingConstraint
         
         secondaryViewModalContainerView.addSubview(modalShadowCloseButton)
         
@@ -95,9 +99,10 @@ class PaneViewController: UIViewController {
     // MARK: Methods
     
     override func showSecondaryViewModallyAnimated(animated: Bool) {
-        guard view.traitCollection.horizontalSizeClass == .Compact && secondaryViewModalContainerLeadingConstraint?.constant != 0 else { return }
+        guard view.traitCollection.horizontalSizeClass == .Compact else { return }
         
-        secondaryViewModalContainerLeadingConstraint?.constant = 0
+        secondaryViewModalContainerHiddenLeadingConstraint?.active = false
+        secondaryViewModalContainerShowingLeadingConstraint?.active = true
         
         UIView.animateWithDuration(animated ? 0.3 : 0) {
             self.view.layoutIfNeeded()
@@ -105,9 +110,10 @@ class PaneViewController: UIViewController {
     }
     
     override func dismissModalSecondaryViewAnimated(animated: Bool) {
-        guard view.traitCollection.horizontalSizeClass == .Compact && secondaryViewModalContainerLeadingConstraint?.constant == 0 else { return }
+        guard view.traitCollection.horizontalSizeClass == .Compact else { return }
         
-        secondaryViewModalContainerLeadingConstraint?.constant = view.bounds.width
+        secondaryViewModalContainerHiddenLeadingConstraint?.active = true
+        secondaryViewModalContainerShowingLeadingConstraint?.active = false
         
         UIView.animateWithDuration(animated ? 0.3 : 0) {
             self.view.layoutIfNeeded()
