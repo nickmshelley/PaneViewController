@@ -21,7 +21,7 @@ class DemoSecondaryViewController: UIViewController {
     }
     
     func hideSecondaryView() {
-        dismissModalSecondaryViewAnimated(true)
+        dismissSecondaryViewAnimated(true)
     }
     
 }
