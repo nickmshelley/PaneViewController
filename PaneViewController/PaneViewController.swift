@@ -32,6 +32,7 @@ class PaneViewController: UIViewController {
     private lazy var modalShadowCloseButton: UIButton = {
         let shadowButton = UIButton()
         shadowButton.addTarget(self, action: "shadowButtonTapped", forControlEvents: .TouchUpInside)
+        shadowButton.alpha = 0
         shadowButton.backgroundColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1)
         shadowButton.translatesAutoresizingMaskIntoConstraints = false
         return shadowButton
@@ -107,6 +108,7 @@ class PaneViewController: UIViewController {
         
         UIView.animateWithDuration(animated ? 0.3 : 0) {
             self.view.layoutIfNeeded()
+            self.modalShadowCloseButton.alpha = 1
         }
     }
     
@@ -121,6 +123,7 @@ class PaneViewController: UIViewController {
         
         UIView.animateWithDuration(animated ? 0.3 : 0) {
             self.view.layoutIfNeeded()
+            self.modalShadowCloseButton.alpha = 0
         }
     }
     
