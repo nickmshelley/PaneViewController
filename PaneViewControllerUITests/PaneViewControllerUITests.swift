@@ -18,7 +18,6 @@ class PaneViewControllerUITests: XCTestCase {
         XCUIApplication().launch()
     }
     
-    
     func testShowHideSide() {
         let app = XCUIApplication()
         XCTAssertTrue(app.staticTexts["Primary View"].hittable)

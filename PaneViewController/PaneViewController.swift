@@ -113,6 +113,8 @@ class PaneViewController: UIViewController {
         secondaryViewSideContainerDraggingWidthConstraint?.active = false
         secondaryViewSideContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[sideHandleView(==10)]", options: [], metrics: nil, views: views))
         secondaryViewSideContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[sideHandleView]|", options: [], metrics: nil, views: views))
+        // We need a constraint for the width to make it off screen
+        updateSecondaryViewSideBySideConstraintForEnum(.Set0)
         
         let secondaryViewModalContainerHiddenLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Leading, relatedBy: .Equal, toItem: view, attribute: .Trailing, multiplier: 1, constant: 0)
         let secondaryViewModalContainerShowingLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Leading, relatedBy: .Equal, toItem: view, attribute: .Leading, multiplier: 1, constant: 0)
