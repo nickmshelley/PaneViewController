@@ -90,7 +90,7 @@ public class PaneViewController: UIViewController {
         return sideHandleView
     }()
     
-    init(primaryViewController: UIViewController, secondaryViewController: UIViewController) {
+    public init(primaryViewController: UIViewController, secondaryViewController: UIViewController) {
         self.primaryViewController = primaryViewController
         self.secondaryViewController = secondaryViewController
         
