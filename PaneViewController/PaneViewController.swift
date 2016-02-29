@@ -17,9 +17,9 @@ class PaneViewController: UIViewController {
         
         func currentValueForFullWidth(fullWidth: CGFloat) -> CGFloat {
             switch self {
-            case Half:
+            case .Half:
                 return fullWidth / 2.0
-            case Set320:
+            case .Set320:
                 return 320
             case .Set0:
                 return 0
@@ -29,6 +29,21 @@ class PaneViewController: UIViewController {
     
     let primaryViewController: UIViewController
     let secondaryViewController: UIViewController
+    
+    var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
+        didSet {
+            if isViewLoaded() {
+                handleView.backgroundColor = handleColor
+            }
+        }
+    }
+    var modalShadowColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1) {
+        didSet {
+            if isViewLoaded() {
+                modalShadowCloseButton.backgroundColor = modalShadowColor
+            }
+        }
+    }
     
     private var isDragging = false
     private var secondaryViewSideContainerCurrentWidthConstraint: NSLayoutConstraint?
@@ -52,23 +67,26 @@ class PaneViewController: UIViewController {
         let shadowButton = UIButton()
         shadowButton.addTarget(self, action: "shadowButtonTapped", forControlEvents: .TouchUpInside)
         shadowButton.alpha = 0
-        shadowButton.backgroundColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1)
+        shadowButton.backgroundColor = self.modalShadowColor
         shadowButton.translatesAutoresizingMaskIntoConstraints = false
         return shadowButton
     }()
-    private lazy var sideHandleView: UIView = {
+    private lazy var handleView: UIView = {
         let handleView = UIView()
         handleView.translatesAutoresizingMaskIntoConstraints = false
         handleView.layer.cornerRadius = 2
-        handleView.backgroundColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5)
+        handleView.backgroundColor = self.handleColor
+        return handleView
+    }()
+    private lazy var sideHandleView: UIView = {
         let sideHandleView = UIView()
         sideHandleView.translatesAutoresizingMaskIntoConstraints = false
         sideHandleView.backgroundColor = UIColor.clearColor()
-        sideHandleView.addSubview(handleView)
-        let views = ["handleView": handleView]
+        sideHandleView.addSubview(self.handleView)
+        let views = ["handleView": self.handleView]
         sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|-4-[handleView(==4)]", options: [], metrics: nil, views: views))
         sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:[handleView(==44)]", options: [], metrics: nil, views: views))
-        sideHandleView.addConstraint(NSLayoutConstraint(item: handleView, attribute: .CenterY, relatedBy: .Equal, toItem: sideHandleView, attribute: .CenterY, multiplier: 1, constant: 0))
+        sideHandleView.addConstraint(NSLayoutConstraint(item: self.handleView, attribute: .CenterY, relatedBy: .Equal, toItem: sideHandleView, attribute: .CenterY, multiplier: 1, constant: 0))
         return sideHandleView
     }()
     
