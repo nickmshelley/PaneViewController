@@ -8,7 +8,7 @@
 
 import UIKit
 
-protocol PaneViewControllerProtocol {
+public protocol PaneViewControllerProtocol {
     
     func showSecondaryViewAnimated(animated: Bool)
     func dismissSecondaryViewAnimated(animated: Bool)
@@ -17,11 +17,11 @@ protocol PaneViewControllerProtocol {
 
 extension UIViewController: PaneViewControllerProtocol {
     
-    func showSecondaryViewAnimated(animated: Bool) {
+    public func showSecondaryViewAnimated(animated: Bool) {
         parentViewController?.showSecondaryViewAnimated(animated)
     }
     
-    func dismissSecondaryViewAnimated(animated: Bool) {
+    public func dismissSecondaryViewAnimated(animated: Bool) {
         parentViewController?.dismissSecondaryViewAnimated(animated)
     }
     

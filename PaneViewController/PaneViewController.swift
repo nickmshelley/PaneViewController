@@ -8,7 +8,7 @@
 
 import UIKit
 
-class PaneViewController: UIViewController {
+public class PaneViewController: UIViewController {
 
     enum PredeterminedWidth {
         case Half
@@ -27,17 +27,17 @@ class PaneViewController: UIViewController {
         }
     }
     
-    let primaryViewController: UIViewController
-    let secondaryViewController: UIViewController
+    public let primaryViewController: UIViewController
+    public let secondaryViewController: UIViewController
     
-    var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
+    public var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
         didSet {
             if isViewLoaded() {
                 handleView.backgroundColor = handleColor
             }
         }
     }
-    var modalShadowColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1) {
+    public var modalShadowColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1) {
         didSet {
             if isViewLoaded() {
                 modalShadowCloseButton.backgroundColor = modalShadowColor
@@ -97,11 +97,11 @@ class PaneViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
 
-    required init?(coder aDecoder: NSCoder) {
+    required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
+    override public func viewDidLoad() {
         super.viewDidLoad()
         
         addChildViewController(primaryViewController)
@@ -147,7 +147,7 @@ class PaneViewController: UIViewController {
         updateSecondaryViewLocationForTraitCollection(traitCollection)
     }
     
-    override func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+    override public func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         super.willTransitionToTraitCollection(newCollection, withTransitionCoordinator: coordinator)
         
         updateSecondaryViewLocationForTraitCollection(newCollection)
@@ -155,7 +155,7 @@ class PaneViewController: UIViewController {
     
     // MARK: Touch methods
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override public func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesBegan(touches, withEvent: event)
         
         guard let firstTouch = touches.first else { return }
@@ -170,7 +170,7 @@ class PaneViewController: UIViewController {
         }
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override public func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesMoved(touches, withEvent: event)
 
         guard isDragging, let firstTouch = touches.first else { return }
@@ -179,13 +179,13 @@ class PaneViewController: UIViewController {
         secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override public func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesEnded(touches, withEvent: event)
         
         touchesEndedOrCancelled()
     }
     
-    override func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
+    override public func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
         super.touchesCancelled(touches, withEvent: event)
         
         touchesEndedOrCancelled()
@@ -193,7 +193,7 @@ class PaneViewController: UIViewController {
     
     // MARK: Methods
     
-    override func showSecondaryViewAnimated(animated: Bool) {
+    override public func showSecondaryViewAnimated(animated: Bool) {
         switch traitCollection.horizontalSizeClass {
         case .Regular:
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
@@ -208,7 +208,7 @@ class PaneViewController: UIViewController {
         }
     }
     
-    override func dismissSecondaryViewAnimated(animated: Bool) {
+    override public func dismissSecondaryViewAnimated(animated: Bool) {
         switch traitCollection.horizontalSizeClass {
         case .Regular:
             updateSecondaryViewSideBySideConstraintForEnum(.Set0)
