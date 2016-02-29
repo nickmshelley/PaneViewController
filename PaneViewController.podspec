@@ -12,7 +12,7 @@ A side drawer controller that toggles between model and side by side view depend
   s.source       = { :git => "https://github.com/LDSChurch/PaneViewController.git", :tag => s.version.to_s }
   s.requires_arc = true
 
-  s.source_files = "*.{h,m,swift}"
+  s.source_files = "PaneViewController/*.{h,m,swift}"
 
   s.framework    = "UIKit"
 end
