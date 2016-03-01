@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Swiftification
 
 public class PaneViewController: UIViewController {
 
@@ -29,12 +30,21 @@ public class PaneViewController: UIViewController {
     
     public let primaryViewController: UIViewController
     public let secondaryViewController: UIViewController
+    public let primaryViewWillChangeWidthObservers = ObserverSet<UIView>()
+    public let primaryViewDidChangeWidthObservers = ObserverSet<UIView>()
     
     public var isSecondaryViewShowing = false
     public var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
         didSet {
             if isViewLoaded() {
                 handleView.backgroundColor = handleColor
+            }
+        }
+    }
+    public var paneSeparatorColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.16) {
+        didSet {
+            if isViewLoaded() {
+                paneSeparatorView.backgroundColor = paneSeparatorColor
             }
         }
     }
@@ -79,14 +89,22 @@ public class PaneViewController: UIViewController {
         handleView.backgroundColor = self.handleColor
         return handleView
     }()
+    private lazy var paneSeparatorView: UIView = {
+        let separatorView = UIView()
+        separatorView.translatesAutoresizingMaskIntoConstraints = false
+        separatorView.backgroundColor = self.paneSeparatorColor
+        return separatorView
+    }()
     private lazy var sideHandleView: UIView = {
         let sideHandleView = UIView()
         sideHandleView.translatesAutoresizingMaskIntoConstraints = false
         sideHandleView.backgroundColor = UIColor.clearColor()
         sideHandleView.addSubview(self.handleView)
-        let views = ["handleView": self.handleView]
-        sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|-4-[handleView(==4)]", options: [], metrics: nil, views: views))
+        sideHandleView.addSubview(self.paneSeparatorView)
+        let views = ["handleView": self.handleView, "paneSeparatorView": self.paneSeparatorView]
+        sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[paneSeparatorView(==1)]-3-[handleView(==4)]", options: [], metrics: nil, views: views))
         sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:[handleView(==44)]", options: [], metrics: nil, views: views))
+        sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[paneSeparatorView]|", options: [], metrics: nil, views: views))
         sideHandleView.addConstraint(NSLayoutConstraint(item: self.handleView, attribute: .CenterY, relatedBy: .Equal, toItem: sideHandleView, attribute: .CenterY, multiplier: 1, constant: 0))
         return sideHandleView
     }()
@@ -167,6 +185,7 @@ public class PaneViewController: UIViewController {
         let location = firstTouch.locationInView(secondaryViewSideContainerView)
         let touchRect = CGRect(x: location.x - 22, y: location.y, width: 22, height: 44)
         if touchRect.intersects(sideHandleView.frame) {
+            primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             isDragging = true
             secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
             secondaryViewSideContainerDraggingWidthConstraint?.active = true
@@ -202,15 +221,18 @@ public class PaneViewController: UIViewController {
         
         switch traitCollection.horizontalSizeClass {
         case .Regular:
+            primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
         case .Compact, .Unspecified:
             secondaryViewModalContainerHiddenLeadingConstraint?.active = false
             secondaryViewModalContainerShowingLeadingConstraint?.active = true
         }
         
-        UIView.animateWithDuration(animated ? 0.3 : 0) {
+        UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 1
+        }) { _ in
+            self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         }
     }
     
@@ -219,23 +241,28 @@ public class PaneViewController: UIViewController {
         
         switch traitCollection.horizontalSizeClass {
         case .Regular:
+            primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set0)
         case .Compact, .Unspecified:
             secondaryViewModalContainerHiddenLeadingConstraint?.active = true
             secondaryViewModalContainerShowingLeadingConstraint?.active = false
         }
         
-        UIView.animateWithDuration(animated ? 0.3 : 0) {
+        UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 0
+        }) { _ in
+            self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         }
     }
     
     private func touchesEndedOrCancelled() {
-        isDragging = false
-        secondaryViewSideContainerDraggingWidthConstraint?.active = false
-        secondaryViewSideContainerCurrentWidthConstraint?.active = true
-        moveSideViewToPredeterminedPositionClosetToWidthAnimated(true)
+        if isDragging {
+            isDragging = false
+            secondaryViewSideContainerDraggingWidthConstraint?.active = false
+            secondaryViewSideContainerCurrentWidthConstraint?.active = true
+            moveSideViewToPredeterminedPositionClosetToWidthAnimated(true)
+        }
     }
     
     private func updateSecondaryViewSideBySideConstraintForEnum(predeterminedWidth: PredeterminedWidth) {
@@ -247,12 +274,15 @@ public class PaneViewController: UIViewController {
         let newSideSecondaryViewWidthConstraint: NSLayoutConstraint
         switch predeterminedWidth {
         case .Half:
+            isSecondaryViewShowing = true
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: primaryViewController.view, attribute: .Width, multiplier: 1, constant: 0)
             view.addConstraint(newSideSecondaryViewWidthConstraint)
         case .Set320:
+            isSecondaryViewShowing = true
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 320)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
         case .Set0:
+            isSecondaryViewShowing = false
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 0)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
         }
@@ -273,8 +303,10 @@ public class PaneViewController: UIViewController {
         
         updateSecondaryViewSideBySideConstraintForEnum(bestPredeterminedWidthEnum)
         
-        UIView.animateWithDuration(animated ? 0.3 : 0) {
+        UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
+        }) { _ in
+            self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         }
     }
     
