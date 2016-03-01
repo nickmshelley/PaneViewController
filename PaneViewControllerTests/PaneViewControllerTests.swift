@@ -19,15 +19,15 @@ class PaneViewControllerTests: XCTestCase {
         XCTAssertEqual(paneViewController.secondaryViewController, demoSecondaryViewController)
     }
     
-    func testGettingCurrentPaneViewControllerFromCurrentPaneViewController() {
+    func testGettingPaneViewControllerFromPaneViewController() {
         let paneViewController = PaneViewController(primaryViewController: DemoPrimaryViewController(), secondaryViewController: DemoSecondaryViewController())
-        XCTAssertEqual(paneViewController.currentPaneViewController(), paneViewController)
+        XCTAssertEqual(paneViewController.paneViewController(), paneViewController)
     }
     
-    func testGettingCurrentPaneViewControllerFromPrimary() {
+    func testGettingPaneViewControllerFromPrimary() {
         let demoPrimaryViewController = DemoPrimaryViewController()
         let paneViewController = PaneViewController(primaryViewController: demoPrimaryViewController, secondaryViewController: DemoSecondaryViewController())
-        XCTAssertEqual(demoPrimaryViewController.currentPaneViewController(), paneViewController)
+        XCTAssertEqual(demoPrimaryViewController.paneViewController(), paneViewController)
     }
     
     func testGettingCurrentPaneViewControllerFromNavStackViewControllerInPrimary() {
@@ -35,7 +35,7 @@ class PaneViewControllerTests: XCTestCase {
         let pushedOnViewController = UIViewController()
         primaryNavigationViewController.pushViewController(pushedOnViewController, animated: false)
         let paneViewController = PaneViewController(primaryViewController: primaryNavigationViewController, secondaryViewController: DemoSecondaryViewController())
-        XCTAssertEqual(pushedOnViewController.currentPaneViewController(), paneViewController)
+        XCTAssertEqual(pushedOnViewController.paneViewController(), paneViewController)
     }
     
 }

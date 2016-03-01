@@ -111,6 +111,8 @@ public class PaneViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         
+        view.clipsToBounds = true
+        
         primaryViewController.view.frame = view.bounds
         primaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(primaryViewController.view)
