@@ -30,6 +30,7 @@ public class PaneViewController: UIViewController {
     public let primaryViewController: UIViewController
     public let secondaryViewController: UIViewController
     
+    public var isSecondaryViewShowing = false
     public var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
         didSet {
             if isViewLoaded() {
@@ -95,6 +96,12 @@ public class PaneViewController: UIViewController {
         self.secondaryViewController = secondaryViewController
         
         super.init(nibName: nil, bundle: nil)
+        
+        addChildViewController(primaryViewController)
+        primaryViewController.didMoveToParentViewController(self)
+        
+        addChildViewController(secondaryViewController)
+        secondaryViewController.didMoveToParentViewController(self)
     }
 
     required public init?(coder aDecoder: NSCoder) {
@@ -104,14 +111,11 @@ public class PaneViewController: UIViewController {
     override public func viewDidLoad() {
         super.viewDidLoad()
         
-        addChildViewController(primaryViewController)
+        view.clipsToBounds = true
+        
         primaryViewController.view.frame = view.bounds
         primaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(primaryViewController.view)
-        primaryViewController.didMoveToParentViewController(self)
-        
-        addChildViewController(secondaryViewController)
-        secondaryViewController.didMoveToParentViewController(self)
         
         view.addSubview(secondaryViewSideContainerView)
         
@@ -194,6 +198,8 @@ public class PaneViewController: UIViewController {
     // MARK: Methods
     
     override public func showSecondaryViewAnimated(animated: Bool) {
+        isSecondaryViewShowing = true
+        
         switch traitCollection.horizontalSizeClass {
         case .Regular:
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
@@ -209,6 +215,8 @@ public class PaneViewController: UIViewController {
     }
     
     override public func dismissSecondaryViewAnimated(animated: Bool) {
+        isSecondaryViewShowing = false
+        
         switch traitCollection.horizontalSizeClass {
         case .Regular:
             updateSecondaryViewSideBySideConstraintForEnum(.Set0)
