@@ -17,8 +17,10 @@ public protocol PaneViewControllerProtocol {
 
 extension UIViewController: PaneViewControllerProtocol {
     
-    public func paneViewController() -> PaneViewController? {
-        return self as? PaneViewController ?? parentViewController?.paneViewController()
+    public var paneViewController: PaneViewController? {
+        get {
+            return self as? PaneViewController ?? parentViewController?.paneViewController
+        }
     }
     
     public func showSecondaryViewAnimated(animated: Bool) {
