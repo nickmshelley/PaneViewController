@@ -61,7 +61,9 @@ public class PaneViewController: UIViewController {
     private var secondaryViewSideContainerDraggingWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerShowingLeadingConstraint: NSLayoutConstraint?
-
+    private var secondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
+    private var previousRegularSizeClassSecondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
+    
     private lazy var secondaryViewSideContainerView: UIView = {
         let containerView = UIView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
@@ -172,7 +174,22 @@ public class PaneViewController: UIViewController {
     override public func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         super.willTransitionToTraitCollection(newCollection, withTransitionCoordinator: coordinator)
         
+        // If they're going from Regular to Compact, save off the width enum so we can restore it if they go back
+        if newCollection.horizontalSizeClass == .Compact && traitCollection.horizontalSizeClass == .Regular {
+            previousRegularSizeClassSecondaryViewSideContainerWidthEnum = secondaryViewSideContainerWidthEnum
+        }
+        
+        // We also want to show the default side view had they not had the side view showing, but did have the modal showing
+        if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact && previousRegularSizeClassSecondaryViewSideContainerWidthEnum == .Set0 && isSecondaryViewShowing {
+            previousRegularSizeClassSecondaryViewSideContainerWidthEnum = .Set320
+        }
+        
         updateSecondaryViewLocationForTraitCollection(newCollection)
+        
+        // If we're going back to Regular from Compact, restore the secondary view width enum
+        if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact {
+            updateSecondaryViewSideBySideConstraintForEnum(previousRegularSizeClassSecondaryViewSideContainerWidthEnum)
+        }
     }
     
     // MARK: Touch methods
@@ -270,6 +287,8 @@ public class PaneViewController: UIViewController {
             secondaryViewSideContainerView.removeConstraint(secondaryViewSideContainerCurrentWidthConstraint)
             view.removeConstraint(secondaryViewSideContainerCurrentWidthConstraint)
         }
+        
+        secondaryViewSideContainerWidthEnum = predeterminedWidth
         
         let newSideSecondaryViewWidthConstraint: NSLayoutConstraint
         switch predeterminedWidth {
