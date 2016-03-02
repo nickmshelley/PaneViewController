@@ -1,0 +1,6 @@
+framework module Pods_PaneViewController {
+  umbrella header "Pods-PaneViewController-umbrella.h"
+
+  export *
+  module * { export * }
+}

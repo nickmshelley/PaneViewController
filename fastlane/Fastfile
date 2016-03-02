@@ -7,8 +7,8 @@ platform :ios do
 
   desc "Run Unit and UI Tests"
   lane :test do
-    xcodebuild(scheme: "PaneViewController", project: "PaneViewController.xcodeproj", sdk: "iphonesimulator", xcargs: "test -destination 'platform=iOS Simulator,name=iPhone 5'")
-    xcodebuild(scheme: "PaneViewController", project: "PaneViewController.xcodeproj", sdk: "iphonesimulator", xcargs: "test -destination 'platform=iOS Simulator,name=iPad 2'")
+    xcodebuild(scheme: "PaneViewController", workspace: "PaneViewController.xcworkspace", sdk: "iphonesimulator", xcargs: "test -destination 'platform=iOS Simulator,name=iPhone 5'")
+    xcodebuild(scheme: "PaneViewController", workspace: "PaneViewController.xcworkspace", sdk: "iphonesimulator", xcargs: "test -destination 'platform=iOS Simulator,name=iPad 2'")
   end
 
 end
