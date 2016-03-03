@@ -442,7 +442,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which swiftlint >/dev/null; then\nswiftlint\nelse\necho \"SwiftLint cannot be found, install with 'brew install swiftlint'\"\nfi";
+			shellScript = "if which swiftlint >/dev/null; then\nswiftlint lint --config swiftlint.yml\nelse\necho \"SwiftLint cannot be found, install with 'brew install swiftlint'\"\nfi";
 		};
 		F3AD47B80590E553D93AD548 /* Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
