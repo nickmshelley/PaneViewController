@@ -234,6 +234,8 @@ public class PaneViewController: UIViewController {
     // MARK: Methods
     
     override public func showSecondaryViewAnimated(animated: Bool) {
+        guard !isSecondaryViewShowing else { return }
+        
         isSecondaryViewShowing = true
         
         switch traitCollection.horizontalSizeClass {
@@ -249,11 +251,15 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 1
         }) { _ in
-            self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
+            if self.traitCollection.horizontalSizeClass == .Regular {
+                self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
+            }
         }
     }
     
     override public func dismissSecondaryViewAnimated(animated: Bool) {
+        guard isSecondaryViewShowing else { return }
+        
         isSecondaryViewShowing = false
         
         switch traitCollection.horizontalSizeClass {
@@ -269,7 +275,9 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 0
         }) { _ in
-            self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
+            if self.traitCollection.horizontalSizeClass == .Regular {
+                self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
+            }
         }
     }
     
