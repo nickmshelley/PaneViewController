@@ -267,8 +267,8 @@ public class PaneViewController: UIViewController {
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set0)
         case .Compact, .Unspecified:
-            secondaryViewModalContainerHiddenLeadingConstraint?.active = true
             secondaryViewModalContainerShowingLeadingConstraint?.active = false
+            secondaryViewModalContainerHiddenLeadingConstraint?.active = true
         }
         
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
