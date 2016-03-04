@@ -169,6 +169,8 @@ public class PaneViewController: UIViewController {
         secondaryViewModalContainerView.addSubview(modalShadowCloseButton)
         
         updateSecondaryViewLocationForTraitCollection(traitCollection)
+        
+        updateSizeClassOfChildViewControllers()
     }
     
     override public func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
@@ -190,6 +192,12 @@ public class PaneViewController: UIViewController {
         if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact {
             updateSecondaryViewSideBySideConstraintForEnum(previousRegularSizeClassSecondaryViewSideContainerWidthEnum)
         }
+    }
+    
+    public override func traitCollectionDidChange(previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        updateSizeClassOfChildViewControllers()
     }
     
     // MARK: Touch methods
@@ -251,6 +259,7 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 1
         }) { _ in
+            self.updateSizeClassOfChildViewControllers()
             if self.traitCollection.horizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
@@ -275,6 +284,7 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 0
         }) { _ in
+            self.updateSizeClassOfChildViewControllers()
             if self.traitCollection.horizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
@@ -287,6 +297,24 @@ public class PaneViewController: UIViewController {
             secondaryViewSideContainerDraggingWidthConstraint?.active = false
             secondaryViewSideContainerCurrentWidthConstraint?.active = true
             moveSideViewToPredeterminedPositionClosetToWidthAnimated(true)
+        }
+    }
+    
+    private func updateSizeClassOfChildViewControllers() {
+        // The vertical size class will be the same as self's
+        let compactTraitCollection = UITraitCollection(traitsFromCollections: [UITraitCollection(verticalSizeClass: traitCollection.verticalSizeClass), UITraitCollection(horizontalSizeClass: .Compact)])
+        let regularTraitCollection = UITraitCollection(traitsFromCollections: [UITraitCollection(verticalSizeClass: traitCollection.verticalSizeClass), UITraitCollection(horizontalSizeClass: .Regular)])
+        
+        // If self is Regular, the child controllers may be Compact
+        // If self is Compact, the child controllers are all Compact
+        switch traitCollection.horizontalSizeClass {
+        case .Regular:
+            // This value seemed to be a good one on iPad to choose when subviews should be compact or not
+            setOverrideTraitCollection(primaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: primaryViewController)
+            setOverrideTraitCollection(secondaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: secondaryViewController)
+        case .Compact, .Unspecified:
+            setOverrideTraitCollection(compactTraitCollection, forChildViewController: primaryViewController)
+            setOverrideTraitCollection(compactTraitCollection, forChildViewController: secondaryViewController)
         }
     }
     
@@ -333,6 +361,7 @@ public class PaneViewController: UIViewController {
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
         }) { _ in
+            self.updateSizeClassOfChildViewControllers()
             self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         }
     }
