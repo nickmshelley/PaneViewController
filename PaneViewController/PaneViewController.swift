@@ -235,6 +235,7 @@ public class PaneViewController: UIViewController {
             secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
         } else if isDraggingModal {
             secondaryViewModalContainerShowingLeadingConstraint?.constant = location.x
+            modalShadowView.alpha = (view.bounds.width / location.x) / 100.0
         }
     }
     
