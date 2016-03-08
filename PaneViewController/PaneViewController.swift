@@ -317,6 +317,8 @@ public class PaneViewController: UIViewController {
                 secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
                 dismissSecondaryViewAnimated(true)
             } else {
+                // Fake that the view wasn't showing so we can animate back into place
+                isSecondaryViewShowing = false
                 secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
                 showSecondaryViewAnimated(true)
             }
