@@ -51,12 +51,13 @@ public class PaneViewController: UIViewController {
     public var modalShadowColor = UIColor(colorLiteralRed: 0, green: 0, blue: 0, alpha: 0.1) {
         didSet {
             if isViewLoaded() {
-                modalShadowCloseButton.backgroundColor = modalShadowColor
+                modalShadowView.backgroundColor = modalShadowColor
             }
         }
     }
     
-    private var isDragging = false
+    private var isDraggingHandle = false
+    private var isDraggingModal = false
     private var secondaryViewSideContainerCurrentWidthConstraint: NSLayoutConstraint?
     private var secondaryViewSideContainerDraggingWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
@@ -76,9 +77,8 @@ public class PaneViewController: UIViewController {
         containerView.clipsToBounds = true
         return containerView
     }()
-    private lazy var modalShadowCloseButton: UIButton = {
-        let shadowButton = UIButton()
-        shadowButton.addTarget(self, action: "shadowButtonTapped", forControlEvents: .TouchUpInside)
+    private lazy var modalShadowView: UIView = {
+        let shadowButton = UIView()
         shadowButton.alpha = 0
         shadowButton.backgroundColor = self.modalShadowColor
         shadowButton.translatesAutoresizingMaskIntoConstraints = false
@@ -166,7 +166,7 @@ public class PaneViewController: UIViewController {
         self.secondaryViewModalContainerHiddenLeadingConstraint = secondaryViewModalContainerHiddenLeadingConstraint
         self.secondaryViewModalContainerShowingLeadingConstraint = secondaryViewModalContainerShowingLeadingConstraint
         
-        secondaryViewModalContainerView.addSubview(modalShadowCloseButton)
+        secondaryViewModalContainerView.addSubview(modalShadowView)
         
         updateSecondaryViewLocationForTraitCollection(traitCollection)
         
@@ -207,24 +207,35 @@ public class PaneViewController: UIViewController {
         
         guard let firstTouch = touches.first else { return }
         
-        let location = firstTouch.locationInView(secondaryViewSideContainerView)
-        let touchRect = CGRect(x: location.x - 22, y: location.y, width: 22, height: 44)
-        if touchRect.intersects(sideHandleView.frame) {
+        let locationInSideContainerView = firstTouch.locationInView(secondaryViewSideContainerView)
+        let sideContainerTouchRect = CGRect(x: locationInSideContainerView.x - 22, y: locationInSideContainerView.y, width: 22, height: 44)
+        if sideContainerTouchRect.intersects(sideHandleView.frame) {
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-            isDragging = true
+            isDraggingHandle = true
             secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
             secondaryViewSideContainerDraggingWidthConstraint?.active = true
             secondaryViewSideContainerCurrentWidthConstraint?.active = false
+        } else {
+            // Check if they're dragging the modal
+            let locationInModal = firstTouch.locationInView(secondaryViewModalContainerView)
+            let modalTouchRect = CGRect(x: locationInModal.x - 22, y: locationInModal.y, width: 22, height: 44)
+            if modalTouchRect.intersects(modalShadowView.frame) {
+                isDraggingModal = true
+            }
         }
     }
     
     override public func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesMoved(touches, withEvent: event)
 
-        guard isDragging, let firstTouch = touches.first else { return }
+        guard let firstTouch = touches.first else { return }
         
         let location = firstTouch.previousLocationInView(view)
-        secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
+        if isDraggingHandle {
+            secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
+        } else if isDraggingModal {
+            secondaryViewModalContainerShowingLeadingConstraint?.constant = location.x
+        }
     }
     
     override public func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
@@ -258,7 +269,7 @@ public class PaneViewController: UIViewController {
         let startingHorizontalSizeClass = self.traitCollection.horizontalSizeClass
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
-            self.modalShadowCloseButton.alpha = 1
+            self.modalShadowView.alpha = 1
         }) { _ in
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
@@ -284,7 +295,7 @@ public class PaneViewController: UIViewController {
         let startingHorizontalSizeClass = self.traitCollection.horizontalSizeClass
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
-            self.modalShadowCloseButton.alpha = 0
+            self.modalShadowView.alpha = 0
         }) { _ in
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
@@ -294,11 +305,22 @@ public class PaneViewController: UIViewController {
     }
     
     private func touchesEndedOrCancelled() {
-        if isDragging {
-            isDragging = false
+        if isDraggingHandle {
+            isDraggingHandle = false
             secondaryViewSideContainerDraggingWidthConstraint?.active = false
             secondaryViewSideContainerCurrentWidthConstraint?.active = true
             moveSideViewToPredeterminedPositionClosetToWidthAnimated(true)
+        } else if isDraggingModal {
+            isDraggingModal = false
+            // If they tapped or dragged past the first quarter of the screen, close
+            if secondaryViewModalContainerShowingLeadingConstraint?.constant == 0 || secondaryViewModalContainerShowingLeadingConstraint?.constant > view.bounds.width * 0.25 {
+                secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
+                dismissSecondaryViewAnimated(true)
+            } else {
+                secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
+                showSecondaryViewAnimated(true)
+            }
+            
         }
     }
     
@@ -368,10 +390,6 @@ public class PaneViewController: UIViewController {
         }
     }
     
-    func shadowButtonTapped() {
-        dismissSecondaryViewAnimated(true)
-    }
-    
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
         dismissSecondaryViewAnimated(false)
         
@@ -384,8 +402,8 @@ public class PaneViewController: UIViewController {
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
             
-            let views = ["secondaryView": secondaryViewController.view, "shadowButton": modalShadowCloseButton]
-            secondaryViewModalContainerView.removeConstraints(modalShadowCloseButton.constraints)
+            let views = ["secondaryView": secondaryViewController.view, "shadowButton": modalShadowView]
+            secondaryViewModalContainerView.removeConstraints(modalShadowView.constraints)
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[shadowButton(==24)][secondaryView]|", options: [], metrics: nil, views: views))
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[shadowButton]|", options: [], metrics: nil, views: views))
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
