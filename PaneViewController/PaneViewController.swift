@@ -255,12 +255,13 @@ public class PaneViewController: UIViewController {
             secondaryViewModalContainerShowingLeadingConstraint?.active = true
         }
         
+        let startingHorizontalSizeClass = self.traitCollection.horizontalSizeClass
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 1
         }) { _ in
             self.updateSizeClassOfChildViewControllers()
-            if self.traitCollection.horizontalSizeClass == .Regular {
+            if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
         }
@@ -280,12 +281,13 @@ public class PaneViewController: UIViewController {
             secondaryViewModalContainerHiddenLeadingConstraint?.active = true
         }
         
+        let startingHorizontalSizeClass = self.traitCollection.horizontalSizeClass
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowCloseButton.alpha = 0
         }) { _ in
             self.updateSizeClassOfChildViewControllers()
-            if self.traitCollection.horizontalSizeClass == .Regular {
+            if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
         }
