@@ -17,7 +17,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window = UIWindow(frame: UIScreen.mainScreen().bounds)
         let primaryNavigationController = UINavigationController(rootViewController: DemoPrimaryViewController())
         let secondaryNavigationController = UINavigationController(rootViewController: DemoSecondaryViewController())
-        window?.rootViewController = PaneViewController(primaryViewController: primaryNavigationController, secondaryViewController: secondaryNavigationController)
+        let paneViewController = PaneViewController(primaryViewController: primaryNavigationController, secondaryViewController: secondaryNavigationController)
+        window?.rootViewController = paneViewController
+        let secondaryViewToBlur = UIView()
+        secondaryViewToBlur.backgroundColor = UIColor(colorLiteralRed: 0, green: 0, blue: 1, alpha: 0.5)
+        paneViewController.secondaryViewToBlur = secondaryViewToBlur
         window?.makeKeyAndVisible()
         
         return true
