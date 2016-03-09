@@ -112,7 +112,7 @@ public class PaneViewController: UIViewController {
         sideHandleView.addSubview(self.handleView)
         sideHandleView.addSubview(self.paneSeparatorView)
         let views = ["handleView": self.handleView, "paneSeparatorView": self.paneSeparatorView]
-        sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[paneSeparatorView(==1)]-3-[handleView(==4)]", options: [], metrics: nil, views: views))
+        sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[paneSeparatorView(==0.5)]-3-[handleView(==4)]", options: [], metrics: nil, views: views))
         sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:[handleView(==44)]", options: [], metrics: nil, views: views))
         sideHandleView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[paneSeparatorView]|", options: [], metrics: nil, views: views))
         sideHandleView.addConstraint(NSLayoutConstraint(item: self.handleView, attribute: .CenterY, relatedBy: .Equal, toItem: sideHandleView, attribute: .CenterY, multiplier: 1, constant: 0))
