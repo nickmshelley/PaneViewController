@@ -10,7 +10,7 @@ import UIKit
 import Swiftification
 
 public class PaneViewController: UIViewController {
-
+    
     enum PredeterminedWidth {
         case Half
         case Set320
@@ -28,12 +28,21 @@ public class PaneViewController: UIViewController {
         }
     }
     
+    public enum PresentationMode {
+        case SideBySide
+        case Modal
+    }
+    
     public let primaryViewController: UIViewController
     public let secondaryViewController: UIViewController
     public let primaryViewWillChangeWidthObservers = ObserverSet<UIView>()
     public let primaryViewDidChangeWidthObservers = ObserverSet<UIView>()
     
-    public var isSecondaryViewShowing = false
+    public private(set) var presentationMode = PresentationMode.Modal
+    public private(set) var isSecondaryViewShowing = false
+    public var primaryViewToBlur: UIView?
+    public var secondaryViewToBlur: UIView?
+    public var shouldBlurWhenSideBySideResizes = true
     public var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
         didSet {
             if isViewLoaded() {
@@ -56,8 +65,7 @@ public class PaneViewController: UIViewController {
         }
     }
     
-    private var isDraggingHandle = false
-    private var isDraggingModal = false
+    private var isDragging = false
     private var secondaryViewSideContainerCurrentWidthConstraint: NSLayoutConstraint?
     private var secondaryViewSideContainerDraggingWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
@@ -110,6 +118,16 @@ public class PaneViewController: UIViewController {
         sideHandleView.addConstraint(NSLayoutConstraint(item: self.handleView, attribute: .CenterY, relatedBy: .Equal, toItem: sideHandleView, attribute: .CenterY, multiplier: 1, constant: 0))
         return sideHandleView
     }()
+    private lazy var primaryVisualEffectView: UIVisualEffectView = {
+        let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .Light))
+        visualEffectView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        return visualEffectView
+    }()
+    private lazy var secondaryVisualEffectView: UIVisualEffectView = {
+        let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .Light))
+        visualEffectView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
+        return visualEffectView
+    }()
     
     public init(primaryViewController: UIViewController, secondaryViewController: UIViewController) {
         self.primaryViewController = primaryViewController
@@ -123,7 +141,7 @@ public class PaneViewController: UIViewController {
         addChildViewController(secondaryViewController)
         secondaryViewController.didMoveToParentViewController(self)
     }
-
+    
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -211,29 +229,32 @@ public class PaneViewController: UIViewController {
         let sideContainerTouchRect = CGRect(x: locationInSideContainerView.x - 22, y: locationInSideContainerView.y, width: 22, height: 44)
         if sideContainerTouchRect.intersects(sideHandleView.frame) {
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-            isDraggingHandle = true
+            isDragging = true
             secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
             secondaryViewSideContainerDraggingWidthConstraint?.active = true
             secondaryViewSideContainerCurrentWidthConstraint?.active = false
+            
+            blurIfNeeded()
         } else {
             // Check if they're dragging the modal
             let locationInModal = firstTouch.locationInView(secondaryViewModalContainerView)
             let modalTouchRect = CGRect(x: locationInModal.x - 22, y: locationInModal.y, width: 22, height: 44)
             if modalTouchRect.intersects(modalShadowView.frame) {
-                isDraggingModal = true
+                isDragging = true
             }
         }
     }
     
     override public func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesMoved(touches, withEvent: event)
-
-        guard let firstTouch = touches.first else { return }
+        
+        guard isDragging, let firstTouch = touches.first else { return }
         
         let location = firstTouch.previousLocationInView(view)
-        if isDraggingHandle {
+        switch presentationMode {
+        case .SideBySide:
             secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
-        } else if isDraggingModal {
+        case .Modal:
             secondaryViewModalContainerShowingLeadingConstraint?.constant = location.x
             modalShadowView.alpha = (view.bounds.width / location.x) / 100.0
         }
@@ -260,9 +281,11 @@ public class PaneViewController: UIViewController {
         
         switch traitCollection.horizontalSizeClass {
         case .Regular:
+            blurIfNeeded()
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
         case .Compact, .Unspecified:
+            secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
             secondaryViewModalContainerHiddenLeadingConstraint?.active = false
             secondaryViewModalContainerShowingLeadingConstraint?.active = true
         }
@@ -272,6 +295,7 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = 1
         }) { _ in
+            self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
@@ -286,6 +310,7 @@ public class PaneViewController: UIViewController {
         
         switch traitCollection.horizontalSizeClass {
         case .Regular:
+            blurIfNeeded()
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set0)
         case .Compact, .Unspecified:
@@ -298,6 +323,7 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = 0
         }) { _ in
+            self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
@@ -305,14 +331,65 @@ public class PaneViewController: UIViewController {
         }
     }
     
+    private func blurIfNeeded() {
+        guard shouldBlurWhenSideBySideResizes && primaryVisualEffectView.superview == nil && secondaryVisualEffectView.superview == nil else { return }
+        
+        if let primaryView = primaryViewToBlur {
+            primaryView.autoresizingMask = [.FlexibleHeight, .FlexibleWidth]
+            primaryView.alpha = 0
+            primaryView.frame = primaryViewController.view.bounds
+            primaryViewController.view.addSubview(primaryView)
+        }
+        
+        primaryVisualEffectView.alpha = 0
+        primaryVisualEffectView.frame = primaryViewController.view.bounds
+        primaryViewController.view.addSubview(primaryVisualEffectView)
+        
+        if let secondaryView = secondaryViewToBlur {
+            secondaryView.autoresizingMask = [.FlexibleHeight, .FlexibleWidth]
+            secondaryView.alpha = 0
+            secondaryView.frame = secondaryViewController.view.bounds
+            secondaryViewController.view.addSubview(secondaryView)
+        }
+        
+        secondaryVisualEffectView.alpha = 0
+        secondaryVisualEffectView.frame = secondaryViewController.view.bounds
+        secondaryViewController.view.addSubview(secondaryVisualEffectView)
+        
+        UIView.animateWithDuration(0.1) {
+            self.primaryViewToBlur?.alpha = 1
+            self.primaryVisualEffectView.alpha = 1
+            self.secondaryViewToBlur?.alpha = 1
+            self.secondaryVisualEffectView.alpha = 1
+        }
+    }
+    
+    private func removeBlurIfNeeded() {
+        guard primaryVisualEffectView.superview != nil && secondaryVisualEffectView.superview != nil else { return }
+        
+        UIView.animateWithDuration(0.1, animations: {
+            self.primaryViewToBlur?.alpha = 0
+            self.primaryVisualEffectView.alpha = 0
+            self.secondaryViewToBlur?.alpha = 0
+            self.secondaryVisualEffectView.alpha = 0
+        }, completion: { _ in
+            self.primaryViewToBlur?.removeFromSuperview()
+            self.primaryVisualEffectView.removeFromSuperview()
+            self.secondaryViewToBlur?.removeFromSuperview()
+            self.secondaryVisualEffectView.removeFromSuperview()
+        })
+    }
+    
     private func touchesEndedOrCancelled() {
-        if isDraggingHandle {
-            isDraggingHandle = false
+        guard isDragging else { return }
+        
+        isDragging = false
+        switch presentationMode {
+        case .SideBySide:
             secondaryViewSideContainerDraggingWidthConstraint?.active = false
             secondaryViewSideContainerCurrentWidthConstraint?.active = true
             moveSideViewToPredeterminedPositionClosetToWidthAnimated(true)
-        } else if isDraggingModal {
-            isDraggingModal = false
+        case .Modal:
             // If they tapped or dragged past the first quarter of the screen, close
             if secondaryViewModalContainerShowingLeadingConstraint?.constant == 0 || secondaryViewModalContainerShowingLeadingConstraint?.constant > view.bounds.width * 0.25 {
                 secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
@@ -320,10 +397,8 @@ public class PaneViewController: UIViewController {
             } else {
                 // Fake that the view wasn't showing so we can animate back into place
                 isSecondaryViewShowing = false
-                secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
                 showSecondaryViewAnimated(true)
             }
-            
         }
     }
     
@@ -388,6 +463,7 @@ public class PaneViewController: UIViewController {
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
         }) { _ in
+            self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         }
@@ -398,10 +474,12 @@ public class PaneViewController: UIViewController {
         
         switch traitCollection.horizontalSizeClass {
         case .Regular:
+            presentationMode = .SideBySide
             secondaryViewController.view.frame = secondaryViewSideContainerView.bounds
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = true
             secondaryViewSideContainerView.insertSubview(secondaryViewController.view, atIndex: 0)
         case .Compact, .Unspecified:
+            presentationMode = .Modal
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
             
