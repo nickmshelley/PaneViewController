@@ -90,7 +90,22 @@ public class PaneViewController: UIViewController {
         shadowButton.alpha = 0
         shadowButton.backgroundColor = self.modalShadowColor
         shadowButton.translatesAutoresizingMaskIntoConstraints = false
+        shadowButton.userInteractionEnabled = false
         return shadowButton
+    }()
+    private lazy var sideHandleTouchView: UIView = {
+        let touchHandleView = UIView()
+        touchHandleView.alpha = 1
+        touchHandleView.backgroundColor = .clearColor()
+        touchHandleView.translatesAutoresizingMaskIntoConstraints = false
+        return touchHandleView
+    }()
+    private lazy var modalHandleTouchView: UIView = {
+        let touchHandleView = UIView()
+        touchHandleView.alpha = 1
+        touchHandleView.backgroundColor = .clearColor()
+        touchHandleView.translatesAutoresizingMaskIntoConstraints = false
+        return touchHandleView
     }()
     private lazy var handleView: UIView = {
         let handleView = UIView()
@@ -156,17 +171,22 @@ public class PaneViewController: UIViewController {
         primaryViewController.view.frame = view.bounds
         primaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(primaryViewController.view)
-        
         view.addSubview(secondaryViewSideContainerView)
-        
         view.addSubview(secondaryViewModalContainerView)
+        view.addSubview(sideHandleTouchView)
+        view.addSubview(modalHandleTouchView)
         
-        let views = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView, "sideHandleView": sideHandleView]
+        primaryViewController.view.addSubview(modalShadowView)
+        
+        let views = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView, "sideHandleView": sideHandleView, "modalShadowView": modalShadowView, "sideHandleTouchView": sideHandleTouchView, "modalHandleTouchView": modalHandleTouchView]
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("[secondaryViewModalContainerView(==view)]", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
+        
+        primaryViewController.view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[modalShadowView]|", options: [], metrics: nil, views: views))
+        primaryViewController.view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalShadowView]|", options: [], metrics: nil, views: views))
         
         secondaryViewSideContainerView.addSubview(sideHandleView)
         let secondaryViewSideContainerWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 0)
@@ -186,7 +206,15 @@ public class PaneViewController: UIViewController {
         self.secondaryViewModalContainerHiddenLeadingConstraint = secondaryViewModalContainerHiddenLeadingConstraint
         self.secondaryViewModalContainerShowingLeadingConstraint = secondaryViewModalContainerShowingLeadingConstraint
         
-        secondaryViewModalContainerView.addSubview(modalShadowView)
+        // Center the side touch to the handle view
+        sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 44))
+        sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 66))
+        view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterX, relatedBy: .Equal, toItem: handleView, attribute: .CenterX, multiplier: 1, constant: 0))
+        view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterY, relatedBy: .Equal, toItem: handleView, attribute: .CenterY, multiplier: 1, constant: 0))
+        
+        modalHandleTouchView.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 44))
+        view.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Leading, relatedBy: .Equal, toItem: secondaryViewModalContainerView, attribute: .Leading, multiplier: 1, constant: 0))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalHandleTouchView]|", options: [], metrics: nil, views: views))
         
         updateSecondaryViewLocationForTraitCollection(traitCollection)
         
@@ -227,21 +255,19 @@ public class PaneViewController: UIViewController {
         
         guard let firstTouch = touches.first else { return }
         
-        let locationInSideContainerView = firstTouch.locationInView(secondaryViewSideContainerView)
-        let sideContainerTouchRect = CGRect(x: locationInSideContainerView.x - 22, y: locationInSideContainerView.y, width: 22, height: 44)
-        if sideContainerTouchRect.intersects(sideHandleView.frame) {
-            primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-            isDragging = true
-            secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
-            secondaryViewSideContainerDraggingWidthConstraint?.active = true
-            secondaryViewSideContainerCurrentWidthConstraint?.active = false
-            
-            blurIfNeeded()
-        } else {
-            // Check if they're dragging the modal
-            let locationInModal = firstTouch.locationInView(secondaryViewModalContainerView)
-            let modalTouchRect = CGRect(x: locationInModal.x - 22, y: locationInModal.y, width: 22, height: 44)
-            if modalTouchRect.intersects(modalShadowView.frame) {
+        switch presentationMode {
+        case .SideBySide:
+            if firstTouch.view == sideHandleTouchView {
+                primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
+                isDragging = true
+                secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
+                secondaryViewSideContainerDraggingWidthConstraint?.active = true
+                secondaryViewSideContainerCurrentWidthConstraint?.active = false
+                
+                blurIfNeeded()
+            }
+        case .Modal:
+            if firstTouch.view == modalHandleTouchView {
                 isDragging = true
             }
         }
@@ -258,7 +284,7 @@ public class PaneViewController: UIViewController {
             secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
         case .Modal:
             secondaryViewModalContainerShowingLeadingConstraint?.constant = location.x
-            modalShadowView.alpha = (view.bounds.width / location.x) / 100.0
+            modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
         }
     }
     
@@ -485,10 +511,9 @@ public class PaneViewController: UIViewController {
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
             
-            let views = ["secondaryView": secondaryViewController.view, "shadowButton": modalShadowView]
+            let views = ["secondaryView": secondaryViewController.view]
             secondaryViewModalContainerView.removeConstraints(modalShadowView.constraints)
-            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[shadowButton(==24)][secondaryView]|", options: [], metrics: nil, views: views))
-            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[shadowButton]|", options: [], metrics: nil, views: views))
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|-24-[secondaryView]|", options: [], metrics: nil, views: views))
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
         }
     }
