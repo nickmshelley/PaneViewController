@@ -245,7 +245,7 @@ public class PaneViewController: UIViewController {
                 blurIfNeeded()
             }
         case .Modal:
-            let modalHandleRect = view.convertRect(modalShadowView.frame, fromView: secondaryViewModalContainerView)
+            let modalHandleRect = view.convertRect(CGRect(x: 0, y: 0, width: 24, height: secondaryViewModalContainerView.bounds.size.height), fromView: secondaryViewModalContainerView)
             if touchRect.intersects(modalHandleRect) {
                 isDragging = true
             }
