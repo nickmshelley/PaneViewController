@@ -212,8 +212,8 @@ public class PaneViewController: UIViewController {
         view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterX, relatedBy: .Equal, toItem: handleView, attribute: .CenterX, multiplier: 1, constant: 0))
         view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterY, relatedBy: .Equal, toItem: handleView, attribute: .CenterY, multiplier: 1, constant: 0))
         
-        modalHandleTouchView.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 44))
-        view.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Leading, relatedBy: .Equal, toItem: secondaryViewModalContainerView, attribute: .Leading, multiplier: 1, constant: 0))
+        modalHandleTouchView.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 66))
+        view.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Leading, relatedBy: .Equal, toItem: secondaryViewModalContainerView, attribute: .Leading, multiplier: 1, constant: -22))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalHandleTouchView]|", options: [], metrics: nil, views: views))
         
         updateSecondaryViewLocationForTraitCollection(traitCollection)
@@ -268,6 +268,13 @@ public class PaneViewController: UIViewController {
             }
         case .Modal:
             if firstTouch.view == modalHandleTouchView {
+                // This allows the view to be dragged onto the screen from the right
+                if !isSecondaryViewShowing {
+                    isSecondaryViewShowing = true
+                    secondaryViewModalContainerShowingLeadingConstraint?.constant = view.bounds.width
+                    secondaryViewModalContainerHiddenLeadingConstraint?.active = false
+                    secondaryViewModalContainerShowingLeadingConstraint?.active = true
+                }
                 isDragging = true
             }
         }
@@ -307,12 +314,15 @@ public class PaneViewController: UIViewController {
         
         isSecondaryViewShowing = true
         
+        let modalShadowViewAlpha: CGFloat
         switch traitCollection.horizontalSizeClass {
         case .Regular:
+            modalShadowViewAlpha = 0
             blurIfNeeded()
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
         case .Compact, .Unspecified:
+            modalShadowViewAlpha = 1
             secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
             secondaryViewModalContainerHiddenLeadingConstraint?.active = false
             secondaryViewModalContainerShowingLeadingConstraint?.active = true
@@ -321,7 +331,7 @@ public class PaneViewController: UIViewController {
         let startingHorizontalSizeClass = self.traitCollection.horizontalSizeClass
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
-            self.modalShadowView.alpha = 1
+            self.modalShadowView.alpha = modalShadowViewAlpha
         }) { _ in
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
@@ -416,7 +426,7 @@ public class PaneViewController: UIViewController {
         case .SideBySide:
             secondaryViewSideContainerDraggingWidthConstraint?.active = false
             secondaryViewSideContainerCurrentWidthConstraint?.active = true
-            moveSideViewToPredeterminedPositionClosetToWidthAnimated(true)
+            moveSideViewToPredeterminedPositionClosestToWidthAnimated(true)
         case .Modal:
             // If they tapped or dragged past the first quarter of the screen, close
             if secondaryViewModalContainerShowingLeadingConstraint?.constant == 0 || secondaryViewModalContainerShowingLeadingConstraint?.constant > view.bounds.width * 0.25 {
@@ -475,7 +485,7 @@ public class PaneViewController: UIViewController {
         secondaryViewSideContainerCurrentWidthConstraint = newSideSecondaryViewWidthConstraint
     }
     
-    private func moveSideViewToPredeterminedPositionClosetToWidthAnimated(animated: Bool) {
+    private func moveSideViewToPredeterminedPositionClosestToWidthAnimated(animated: Bool) {
         let fullWidth = view.bounds.width
         let currentWidth = secondaryViewSideContainerView.bounds.width
         let predeterminedWidthEnums: [PredeterminedWidth] = [.Half, .Set320, .Set0]
