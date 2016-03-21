@@ -18,6 +18,7 @@
 		ECA3328E1C7F6771008D5F42 /* PaneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3328D1C7F6771008D5F42 /* PaneViewController.swift */; };
 		ECA332901C7F69B0008D5F42 /* DemoPrimaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA3328F1C7F69B0008D5F42 /* DemoPrimaryViewController.swift */; };
 		ECA332921C7F7D89008D5F42 /* DemoSecondaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECA332911C7F7D89008D5F42 /* DemoSecondaryViewController.swift */; };
+		ECFF68591CA03DCE00F793D3 /* PaneViewController.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ECFF68581CA03DCE00F793D3 /* PaneViewController.xcassets */; };
 		EF7032F485A8FE726D314102 /* Pods_PaneViewControllerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73E4E62515D800C0920085DA /* Pods_PaneViewControllerTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +65,7 @@
 		ECA3328D1C7F6771008D5F42 /* PaneViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PaneViewController.swift; path = PaneViewController/PaneViewController.swift; sourceTree = "<group>"; };
 		ECA3328F1C7F69B0008D5F42 /* DemoPrimaryViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoPrimaryViewController.swift; sourceTree = "<group>"; };
 		ECA332911C7F7D89008D5F42 /* DemoSecondaryViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DemoSecondaryViewController.swift; sourceTree = "<group>"; };
+		ECFF68581CA03DCE00F793D3 /* PaneViewController.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = PaneViewController.xcassets; path = Resources/PaneViewController.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +177,7 @@
 		ECA3328C1C7F6764008D5F42 /* PaneViewController */ = {
 			isa = PBXGroup;
 			children = (
+				ECFF68571CA03D7900F793D3 /* Resources */,
 				ECA3328D1C7F6771008D5F42 /* PaneViewController.swift */,
 				EC1157B51C849BFC002586EE /* UIViewControllerPaneViewExtension.swift */,
 			);
@@ -188,6 +191,14 @@
 				ECA332911C7F7D89008D5F42 /* DemoSecondaryViewController.swift */,
 			);
 			name = ViewControllers;
+			sourceTree = "<group>";
+		};
+		ECFF68571CA03D7900F793D3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ECFF68581CA03DCE00F793D3 /* PaneViewController.xcassets */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -304,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ECA332881C7F6749008D5F42 /* Assets.xcassets in Resources */,
+				ECFF68591CA03DCE00F793D3 /* PaneViewController.xcassets in Resources */,
 				ECA332891C7F6749008D5F42 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

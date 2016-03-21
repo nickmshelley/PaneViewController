@@ -65,11 +65,15 @@ public class PaneViewController: UIViewController {
         }
     }
     
+    private let modalOpenGap = CGFloat(20)
+    
     private var isDragging = false
     private var secondaryViewSideContainerCurrentWidthConstraint: NSLayoutConstraint?
     private var secondaryViewSideContainerDraggingWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerShowingLeadingConstraint: NSLayoutConstraint?
+    private var secondaryViewModalContainerWidthConstraint: NSLayoutConstraint?
+    private var secondaryViewModalContainerOpenLocation = CGFloat(0)
     private var secondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
     private var previousRegularSizeClassSecondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
     
@@ -86,23 +90,27 @@ public class PaneViewController: UIViewController {
         return containerView
     }()
     private lazy var modalShadowView: UIView = {
-        let shadowButton = UIView()
-        shadowButton.alpha = 0
-        shadowButton.backgroundColor = self.modalShadowColor
-        shadowButton.translatesAutoresizingMaskIntoConstraints = false
-        shadowButton.userInteractionEnabled = false
-        return shadowButton
+        let shadowView = UIView()
+        shadowView.alpha = 0
+        shadowView.backgroundColor = self.modalShadowColor
+        shadowView.translatesAutoresizingMaskIntoConstraints = false
+        shadowView.userInteractionEnabled = false
+        return shadowView
+    }()
+    private lazy var modalShadowImageView: UIImageView = {
+        let shadowImageView = UIImageView(image: UIImage(named: "modalEdgeShadow", inBundle: NSBundle(forClass: PaneViewController.self), compatibleWithTraitCollection: nil))
+        shadowImageView.alpha = 0
+        shadowImageView.translatesAutoresizingMaskIntoConstraints = false
+        return shadowImageView
     }()
     private lazy var sideHandleTouchView: UIView = {
         let touchHandleView = UIView()
-        touchHandleView.alpha = 1
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
     }()
     private lazy var modalHandleTouchView: UIView = {
         let touchHandleView = UIView()
-        touchHandleView.alpha = 1
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
@@ -180,10 +188,12 @@ public class PaneViewController: UIViewController {
         
         let views = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView, "sideHandleView": sideHandleView, "modalShadowView": modalShadowView, "sideHandleTouchView": sideHandleTouchView, "modalHandleTouchView": modalHandleTouchView]
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
-        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("[secondaryViewModalContainerView(==view)]", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
+        let secondaryViewModalContainerWidthConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: view.bounds.width)
+        secondaryViewModalContainerView.addConstraint(secondaryViewModalContainerWidthConstraint)
+        self.secondaryViewModalContainerWidthConstraint = secondaryViewModalContainerWidthConstraint
         
         primaryViewController.view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[modalShadowView]|", options: [], metrics: nil, views: views))
         primaryViewController.view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalShadowView]|", options: [], metrics: nil, views: views))
@@ -221,6 +231,25 @@ public class PaneViewController: UIViewController {
         updateSizeClassOfChildViewControllers()
     }
     
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        if !isDragging {
+            // Find the narrow side and make it so the modal only goes out that far, even in the other orientation
+            if traitCollection.horizontalSizeClass == .Compact || traitCollection.verticalSizeClass == .Compact {
+                let narrowestSide = min(view.bounds.height, view.bounds.width)
+                secondaryViewModalContainerOpenLocation = view.bounds.width - narrowestSide
+                secondaryViewModalContainerWidthConstraint?.constant = narrowestSide
+                
+                if isSecondaryViewShowing {
+                    secondaryViewModalContainerShowingLeadingConstraint?.constant = secondaryViewModalContainerOpenLocation
+                }
+            } else {
+                secondaryViewModalContainerOpenLocation = 0
+            }
+        }
+    }
+    
     override public func willTransitionToTraitCollection(newCollection: UITraitCollection, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         super.willTransitionToTraitCollection(newCollection, withTransitionCoordinator: coordinator)
         
@@ -232,6 +261,11 @@ public class PaneViewController: UIViewController {
         // We also want to show the default side view had they not had the side view showing, but did have the modal showing
         if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact && previousRegularSizeClassSecondaryViewSideContainerWidthEnum == .Set0 && isSecondaryViewShowing {
             previousRegularSizeClassSecondaryViewSideContainerWidthEnum = .Set320
+        }
+        
+        // Close the secondary view if we're changing from compact to regular or regular to compact
+        if newCollection.horizontalSizeClass != traitCollection.horizontalSizeClass {
+            dismissSecondaryViewAnimated(false)
         }
         
         updateSecondaryViewLocationForTraitCollection(newCollection)
@@ -271,6 +305,7 @@ public class PaneViewController: UIViewController {
                 // This allows the view to be dragged onto the screen from the right
                 if !isSecondaryViewShowing {
                     isSecondaryViewShowing = true
+                    modalShadowImageView.alpha = 1
                     secondaryViewModalContainerShowingLeadingConstraint?.constant = view.bounds.width
                     secondaryViewModalContainerHiddenLeadingConstraint?.active = false
                     secondaryViewModalContainerShowingLeadingConstraint?.active = true
@@ -290,7 +325,7 @@ public class PaneViewController: UIViewController {
         case .SideBySide:
             secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
         case .Modal:
-            secondaryViewModalContainerShowingLeadingConstraint?.constant = location.x
+            secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap, secondaryViewModalContainerOpenLocation)
             modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
         }
     }
@@ -323,11 +358,12 @@ public class PaneViewController: UIViewController {
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
         case .Compact, .Unspecified:
             modalShadowViewAlpha = 1
-            secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
+            secondaryViewModalContainerShowingLeadingConstraint?.constant = secondaryViewModalContainerOpenLocation
             secondaryViewModalContainerHiddenLeadingConstraint?.active = false
             secondaryViewModalContainerShowingLeadingConstraint?.active = true
         }
         
+        modalShadowImageView.alpha = modalShadowViewAlpha
         let startingHorizontalSizeClass = self.traitCollection.horizontalSizeClass
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
@@ -361,6 +397,7 @@ public class PaneViewController: UIViewController {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = 0
         }) { _ in
+            self.modalShadowImageView.alpha = 0
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
@@ -429,8 +466,8 @@ public class PaneViewController: UIViewController {
             moveSideViewToPredeterminedPositionClosestToWidthAnimated(true)
         case .Modal:
             // If they tapped or dragged past the first quarter of the screen, close
-            if secondaryViewModalContainerShowingLeadingConstraint?.constant == 0 || secondaryViewModalContainerShowingLeadingConstraint?.constant > view.bounds.width * 0.25 {
-                secondaryViewModalContainerShowingLeadingConstraint?.constant = 0
+            if secondaryViewModalContainerShowingLeadingConstraint?.constant <= secondaryViewModalContainerOpenLocation || secondaryViewModalContainerShowingLeadingConstraint?.constant > (view.bounds.width * 0.25) + secondaryViewModalContainerOpenLocation {
+                secondaryViewModalContainerShowingLeadingConstraint?.constant = secondaryViewModalContainerOpenLocation
                 dismissSecondaryViewAnimated(true)
             } else {
                 // Fake that the view wasn't showing so we can animate back into place
@@ -508,8 +545,6 @@ public class PaneViewController: UIViewController {
     }
     
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
-        dismissSecondaryViewAnimated(false)
-        
         switch traitCollection.horizontalSizeClass {
         case .Regular:
             presentationMode = .SideBySide
@@ -520,11 +555,15 @@ public class PaneViewController: UIViewController {
             presentationMode = .Modal
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
+            secondaryViewModalContainerView.addSubview(modalShadowImageView)
             
-            let views = ["secondaryView": secondaryViewController.view]
+            let views = ["secondaryView": secondaryViewController.view, "modalShadowImageView": modalShadowImageView]
+            let metrics = ["modalOpenGap": modalOpenGap]
             secondaryViewModalContainerView.removeConstraints(modalShadowView.constraints)
-            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|-24-[secondaryView]|", options: [], metrics: nil, views: views))
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("[modalShadowImageView][secondaryView]|", options: [], metrics: nil, views: views))
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|-modalOpenGap-[secondaryView]|", options: [], metrics: metrics, views: views))
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
+            secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalShadowImageView]|", options: [], metrics: nil, views: views))
         }
     }
     
