@@ -67,7 +67,10 @@ public class PaneViewController: UIViewController {
     
     private let modalOpenGap = CGFloat(20)
     
+    private var touchStartedDownInHandle = false
+    private var touchStartedWithSecondaryOpen = false
     private var isDragging = false
+    private var dragVelocity = CGFloat(0)
     private var secondaryViewSideContainerCurrentWidthConstraint: NSLayoutConstraint?
     private var secondaryViewSideContainerDraggingWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
@@ -234,7 +237,7 @@ public class PaneViewController: UIViewController {
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        if !isDragging {
+        if !touchStartedDownInHandle {
             // Find the narrow side and make it so the modal only goes out that far, even in the other orientation
             if traitCollection.horizontalSizeClass == .Compact || traitCollection.verticalSizeClass == .Compact {
                 let narrowestSide = min(view.bounds.height, view.bounds.width)
@@ -289,11 +292,13 @@ public class PaneViewController: UIViewController {
         
         guard let firstTouch = touches.first else { return }
         
+        touchStartedWithSecondaryOpen = isSecondaryViewShowing
+        
         switch presentationMode {
         case .SideBySide:
             if firstTouch.view == sideHandleTouchView {
                 primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-                isDragging = true
+                touchStartedDownInHandle = true
                 secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
                 secondaryViewSideContainerDraggingWidthConstraint?.active = true
                 secondaryViewSideContainerCurrentWidthConstraint?.active = false
@@ -310,7 +315,7 @@ public class PaneViewController: UIViewController {
                     secondaryViewModalContainerHiddenLeadingConstraint?.active = false
                     secondaryViewModalContainerShowingLeadingConstraint?.active = true
                 }
-                isDragging = true
+                touchStartedDownInHandle = true
             }
         }
     }
@@ -318,9 +323,11 @@ public class PaneViewController: UIViewController {
     override public func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
         super.touchesMoved(touches, withEvent: event)
         
-        guard isDragging, let firstTouch = touches.first else { return }
+        guard touchStartedDownInHandle, let firstTouch = touches.first else { return }
         
-        let location = firstTouch.previousLocationInView(view)
+        isDragging = true
+        let location = firstTouch.locationInView(view)
+        dragVelocity = location.x - firstTouch.previousLocationInView(view).x
         switch presentationMode {
         case .SideBySide:
             secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
@@ -456,25 +463,30 @@ public class PaneViewController: UIViewController {
     }
     
     private func touchesEndedOrCancelled() {
-        guard isDragging else { return }
+        guard touchStartedDownInHandle else { return }
         
-        isDragging = false
         switch presentationMode {
         case .SideBySide:
             secondaryViewSideContainerDraggingWidthConstraint?.active = false
             secondaryViewSideContainerCurrentWidthConstraint?.active = true
             moveSideViewToPredeterminedPositionClosestToWidthAnimated(true)
         case .Modal:
-            // If they tapped or dragged past the first quarter of the screen, close
-            if secondaryViewModalContainerShowingLeadingConstraint?.constant <= secondaryViewModalContainerOpenLocation || secondaryViewModalContainerShowingLeadingConstraint?.constant > (view.bounds.width * 0.25) + secondaryViewModalContainerOpenLocation {
-                secondaryViewModalContainerShowingLeadingConstraint?.constant = secondaryViewModalContainerOpenLocation
-                dismissSecondaryViewAnimated(true)
+            // If they tapped or dragged past the first quarter of the screen (if secondary was open) or drag only to the first quarter of the screen (if secondary started closed), close (again)
+            if dragVelocity > 10 || isDragging == false ||
+                (dragVelocity > -10 &&
+                (secondaryViewModalContainerShowingLeadingConstraint?.constant > (view.bounds.width * 0.25) + secondaryViewModalContainerOpenLocation && touchStartedWithSecondaryOpen) ||
+                (secondaryViewModalContainerShowingLeadingConstraint?.constant > (view.bounds.width * 0.75) + secondaryViewModalContainerOpenLocation && !touchStartedWithSecondaryOpen)) {
+                    secondaryViewModalContainerShowingLeadingConstraint?.constant = secondaryViewModalContainerOpenLocation
+                    dismissSecondaryViewAnimated(true)
             } else {
                 // Fake that the view wasn't showing so we can animate back into place
                 isSecondaryViewShowing = false
                 showSecondaryViewAnimated(true)
             }
         }
+        
+        touchStartedDownInHandle = false
+        isDragging = false
     }
     
     private func updateSizeClassOfChildViewControllers() {
@@ -548,11 +560,15 @@ public class PaneViewController: UIViewController {
         switch traitCollection.horizontalSizeClass {
         case .Regular:
             presentationMode = .SideBySide
+            sideHandleTouchView.userInteractionEnabled = true
+            modalHandleTouchView.userInteractionEnabled = false
             secondaryViewController.view.frame = secondaryViewSideContainerView.bounds
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = true
             secondaryViewSideContainerView.insertSubview(secondaryViewController.view, atIndex: 0)
         case .Compact, .Unspecified:
             presentationMode = .Modal
+            sideHandleTouchView.userInteractionEnabled = false
+            modalHandleTouchView.userInteractionEnabled = true
             secondaryViewController.view.translatesAutoresizingMaskIntoConstraints = false
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
             secondaryViewModalContainerView.addSubview(modalShadowImageView)

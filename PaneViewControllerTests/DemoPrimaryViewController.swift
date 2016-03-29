@@ -10,6 +10,8 @@ import UIKit
 
 class DemoPrimaryViewController: UIViewController {
     
+    private var colorIndex = 0
+    private let colors = [UIColor.greenColor(), UIColor.blackColor(), UIColor.orangeColor(), UIColor.purpleColor()]
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -17,11 +19,19 @@ class DemoPrimaryViewController: UIViewController {
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Show", style: .Plain, target: self, action: "showSecondaryView")
         
-        view.backgroundColor = UIColor.greenColor()
+        view.backgroundColor = colors[colorIndex]
     }
     
     func showSecondaryView() {
         showSecondaryViewAnimated(true)
+    }
+    
+    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+        super.touchesBegan(touches, withEvent: event)
+        
+        colorIndex += 1
+        colorIndex %= colors.count
+        view.backgroundColor = colors[colorIndex]
     }
     
 }
