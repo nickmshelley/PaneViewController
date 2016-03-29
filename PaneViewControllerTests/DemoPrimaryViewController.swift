@@ -10,8 +10,10 @@ import UIKit
 
 class DemoPrimaryViewController: UIViewController {
     
-    private var colorIndex = 0
     private let colors = [UIColor.greenColor(), UIColor.blackColor(), UIColor.orangeColor(), UIColor.purpleColor()]
+    
+    private var colorIndex = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
