@@ -107,16 +107,23 @@ public class PaneViewController: UIViewController {
         return shadowImageView
     }()
     private lazy var sideHandleTouchView: UIView = {
-        let touchHandleView = UIView()
+        let touchHandleView = HandleView()
+        touchHandleView.delegate = self
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
     }()
     private lazy var modalHandleTouchView: UIView = {
-        let touchHandleView = UIView()
+        let touchHandleView = HandleView()
+        touchHandleView.delegate = self
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
+    }()
+    private lazy var panGestureRecognizer: UIPanGestureRecognizer = {
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: "panGestureRecognized:")
+        panGestureRecognizer.delegate = self
+        return panGestureRecognizer
     }()
     private lazy var handleView: UIView = {
         let handleView = UIView()
@@ -194,6 +201,7 @@ public class PaneViewController: UIViewController {
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[sideHandleTouchView]|", options: [], metrics: nil, views: views))
         let secondaryViewModalContainerWidthConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: view.bounds.width)
         secondaryViewModalContainerView.addConstraint(secondaryViewModalContainerWidthConstraint)
         self.secondaryViewModalContainerWidthConstraint = secondaryViewModalContainerWidthConstraint
@@ -220,18 +228,19 @@ public class PaneViewController: UIViewController {
         self.secondaryViewModalContainerShowingLeadingConstraint = secondaryViewModalContainerShowingLeadingConstraint
         
         // Center the side touch to the handle view
-        sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 44))
-        sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 66))
+        sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 88))
         view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterX, relatedBy: .Equal, toItem: handleView, attribute: .CenterX, multiplier: 1, constant: 0))
         view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterY, relatedBy: .Equal, toItem: handleView, attribute: .CenterY, multiplier: 1, constant: 0))
         
-        modalHandleTouchView.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 66))
-        view.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Leading, relatedBy: .Equal, toItem: secondaryViewModalContainerView, attribute: .Leading, multiplier: 1, constant: -22))
+        modalHandleTouchView.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 110))
+        view.addConstraint(NSLayoutConstraint(item: modalHandleTouchView, attribute: .Leading, relatedBy: .Equal, toItem: secondaryViewModalContainerView, attribute: .Leading, multiplier: 1, constant: -44))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalHandleTouchView]|", options: [], metrics: nil, views: views))
         
         updateSecondaryViewLocationForTraitCollection(traitCollection)
         
         updateSizeClassOfChildViewControllers()
+        
+        view.addGestureRecognizer(panGestureRecognizer)
     }
     
     public override func viewDidLayoutSubviews() {
@@ -285,68 +294,53 @@ public class PaneViewController: UIViewController {
         updateSizeClassOfChildViewControllers()
     }
     
-    // MARK: Touch methods
-    
-    override public func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        super.touchesBegan(touches, withEvent: event)
-        
-        guard let firstTouch = touches.first else { return }
-        
-        touchStartedWithSecondaryOpen = isSecondaryViewShowing
-        
-        switch presentationMode {
-        case .SideBySide:
-            if firstTouch.view == sideHandleTouchView {
-                primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-                touchStartedDownInHandle = true
-                secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
-                secondaryViewSideContainerDraggingWidthConstraint?.active = true
-                secondaryViewSideContainerCurrentWidthConstraint?.active = false
-                
-                blurIfNeeded()
-            }
-        case .Modal:
-            if firstTouch.view == modalHandleTouchView {
-                // This allows the view to be dragged onto the screen from the right
-                if !isSecondaryViewShowing {
-                    isSecondaryViewShowing = true
-                    modalShadowImageView.alpha = 1
-                    secondaryViewModalContainerShowingLeadingConstraint?.constant = view.bounds.width
-                    secondaryViewModalContainerHiddenLeadingConstraint?.active = false
-                    secondaryViewModalContainerShowingLeadingConstraint?.active = true
+    func panGestureRecognized(gestureRecognizer: UIPanGestureRecognizer) {
+        switch gestureRecognizer.state {
+        case .Began:
+            touchStartedWithSecondaryOpen = isSecondaryViewShowing
+            
+            switch presentationMode {
+            case .SideBySide:
+                if sideHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) {
+                    primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
+                    touchStartedDownInHandle = true
+                    secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
+                    secondaryViewSideContainerDraggingWidthConstraint?.active = true
+                    secondaryViewSideContainerCurrentWidthConstraint?.active = false
+                    
+                    blurIfNeeded()
                 }
-                touchStartedDownInHandle = true
+            case .Modal:
+                if modalHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) {
+                    // This allows the view to be dragged onto the screen from the right
+                    if !isSecondaryViewShowing {
+                        isSecondaryViewShowing = true
+                        modalShadowImageView.alpha = 1
+                        secondaryViewModalContainerShowingLeadingConstraint?.constant = view.bounds.width
+                        secondaryViewModalContainerHiddenLeadingConstraint?.active = false
+                        secondaryViewModalContainerShowingLeadingConstraint?.active = true
+                    }
+                    touchStartedDownInHandle = true
+                }
             }
+        case .Changed:
+            guard touchStartedDownInHandle else { return }
+            
+            isDragging = true
+            let location = gestureRecognizer.locationInView(view)
+            dragVelocity = gestureRecognizer.velocityInView(view).x
+            switch presentationMode {
+            case .SideBySide:
+                secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
+            case .Modal:
+                secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap, secondaryViewModalContainerOpenLocation)
+                modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
+            }
+        case .Ended, .Failed, .Cancelled:
+            touchesEndedOrCancelled()
+        case .Possible:
+            break
         }
-    }
-    
-    override public func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        super.touchesMoved(touches, withEvent: event)
-        
-        guard touchStartedDownInHandle, let firstTouch = touches.first else { return }
-        
-        isDragging = true
-        let location = firstTouch.locationInView(view)
-        dragVelocity = location.x - firstTouch.previousLocationInView(view).x
-        switch presentationMode {
-        case .SideBySide:
-            secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
-        case .Modal:
-            secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap, secondaryViewModalContainerOpenLocation)
-            modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
-        }
-    }
-    
-    override public func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        super.touchesEnded(touches, withEvent: event)
-        
-        touchesEndedOrCancelled()
-    }
-    
-    override public func touchesCancelled(touches: Set<UITouch>?, withEvent event: UIEvent?) {
-        super.touchesCancelled(touches, withEvent: event)
-        
-        touchesEndedOrCancelled()
     }
     
     // MARK: Methods
@@ -581,6 +575,33 @@ public class PaneViewController: UIViewController {
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalShadowImageView]|", options: [], metrics: nil, views: views))
         }
+    }
+    
+}
+
+extension PaneViewController: HandleViewDelegate {
+    
+    func hitTest(point: CGPoint, withEvent event: UIEvent?, inView: UIView) -> UIView? {
+        let mainViewPoint = inView.convertPoint(point, toView: view)
+        if secondaryViewModalContainerView.frame.contains(mainViewPoint) || secondaryViewSideContainerView.frame.contains(mainViewPoint) {
+            let convertedPoint = inView.convertPoint(point, toView: secondaryViewController.view)
+            return secondaryViewController.view.hitTest(convertedPoint, withEvent: event)
+        }
+        
+        let convertedPoint = inView.convertPoint(point, toView: primaryViewController.view)
+        return primaryViewController.view.hitTest(convertedPoint, withEvent: event)
+    }
+    
+}
+
+extension PaneViewController: UIGestureRecognizerDelegate {
+    
+    public func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOfGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return false
+    }
+    
+    public func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
     
 }
