@@ -107,13 +107,15 @@ public class PaneViewController: UIViewController {
         return shadowImageView
     }()
     private lazy var sideHandleTouchView: UIView = {
-        let touchHandleView = UIView()
+        let touchHandleView = HandleView()
+        touchHandleView.delegate = self
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
     }()
     private lazy var modalHandleTouchView: UIView = {
-        let touchHandleView = UIView()
+        let touchHandleView = HandleView()
+        touchHandleView.delegate = self
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
@@ -194,6 +196,7 @@ public class PaneViewController: UIViewController {
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[sideHandleTouchView]|", options: [], metrics: nil, views: views))
         let secondaryViewModalContainerWidthConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: view.bounds.width)
         secondaryViewModalContainerView.addConstraint(secondaryViewModalContainerWidthConstraint)
         self.secondaryViewModalContainerWidthConstraint = secondaryViewModalContainerWidthConstraint
@@ -221,7 +224,6 @@ public class PaneViewController: UIViewController {
         
         // Center the side touch to the handle view
         sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 44))
-        sideHandleTouchView.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .Height, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 66))
         view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterX, relatedBy: .Equal, toItem: handleView, attribute: .CenterX, multiplier: 1, constant: 0))
         view.addConstraint(NSLayoutConstraint(item: sideHandleTouchView, attribute: .CenterY, relatedBy: .Equal, toItem: handleView, attribute: .CenterY, multiplier: 1, constant: 0))
         
@@ -293,10 +295,11 @@ public class PaneViewController: UIViewController {
         guard let firstTouch = touches.first else { return }
         
         touchStartedWithSecondaryOpen = isSecondaryViewShowing
-        
+        let locationInView = firstTouch.locationInView(view)
         switch presentationMode {
         case .SideBySide:
-            if firstTouch.view == sideHandleTouchView {
+            // Prefer using the view directly, but that isn't possible if we're trying to drag in from the edge because we force the view in that case to be the contained view so it gets the touches
+            if firstTouch.view == sideHandleTouchView || (isSecondaryViewShowing == false && sideHandleTouchView.frame.contains(locationInView)) {
                 primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
                 touchStartedDownInHandle = true
                 secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
@@ -306,7 +309,8 @@ public class PaneViewController: UIViewController {
                 blurIfNeeded()
             }
         case .Modal:
-            if firstTouch.view == modalHandleTouchView {
+            // Prefer using the view directly, but that isn't possible if we're trying to drag in from the edge because we force the view in that case to be the contained view so it gets the touches
+            if firstTouch.view == modalHandleTouchView || (isSecondaryViewShowing == false && modalHandleTouchView.frame.contains(locationInView)) {
                 // This allows the view to be dragged onto the screen from the right
                 if !isSecondaryViewShowing {
                     isSecondaryViewShowing = true
@@ -581,6 +585,17 @@ public class PaneViewController: UIViewController {
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryView]|", options: [], metrics: nil, views: views))
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalShadowImageView]|", options: [], metrics: nil, views: views))
         }
+    }
+    
+}
+
+extension PaneViewController: HandleViewDelegate {
+    
+    func hitTest(point: CGPoint, withEvent event: UIEvent?, inView: UIView) -> UIView? {
+        guard !isSecondaryViewShowing else { return nil }
+        
+        let convertedPoint = inView.convertPoint(point, toView: primaryViewController.view)
+        return primaryViewController.view.hitTest(convertedPoint, withEvent: event)
     }
     
 }
