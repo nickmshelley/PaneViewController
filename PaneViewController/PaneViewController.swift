@@ -65,6 +65,12 @@ public class PaneViewController: UIViewController {
         }
     }
     
+    public lazy var panGestureRecognizer: UIPanGestureRecognizer = {
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: "panGestureRecognized:")
+        panGestureRecognizer.delegate = self
+        return panGestureRecognizer
+    }()
+    
     private let modalOpenGap = CGFloat(20)
     
     private var touchStartedDownInHandle = false
@@ -117,11 +123,6 @@ public class PaneViewController: UIViewController {
         touchHandleView.backgroundColor = .clearColor()
         touchHandleView.translatesAutoresizingMaskIntoConstraints = false
         return touchHandleView
-    }()
-    private lazy var panGestureRecognizer: UIPanGestureRecognizer = {
-        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: "panGestureRecognized:")
-        panGestureRecognizer.delegate = self
-        return panGestureRecognizer
     }()
     private lazy var handleView: UIView = {
         let handleView = UIView()
