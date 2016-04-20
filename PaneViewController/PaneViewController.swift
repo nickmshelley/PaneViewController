@@ -66,7 +66,7 @@ public class PaneViewController: UIViewController {
     }
     
     public lazy var panGestureRecognizer: UIPanGestureRecognizer = {
-        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: "panGestureRecognized:")
+        let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognized))
         panGestureRecognizer.delegate = self
         return panGestureRecognizer
     }()
@@ -82,7 +82,7 @@ public class PaneViewController: UIViewController {
     private var secondaryViewModalContainerWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerOpenLocation = CGFloat(0)
     private var secondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
-    private var previousRegularSizeClassSecondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
+    private var previousRegularSizeSecondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
     
     private lazy var secondaryViewSideContainerView: UIView = {
         let containerView = UIView()
@@ -266,12 +266,12 @@ public class PaneViewController: UIViewController {
         
         // If they're going from Regular to Compact, save off the width enum so we can restore it if they go back
         if newCollection.horizontalSizeClass == .Compact && traitCollection.horizontalSizeClass == .Regular {
-            previousRegularSizeClassSecondaryViewSideContainerWidthEnum = secondaryViewSideContainerWidthEnum
+            previousRegularSizeSecondaryViewSideContainerWidthEnum = secondaryViewSideContainerWidthEnum
         }
         
         // We also want to show the default side view had they not had the side view showing, but did have the modal showing
-        if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact && previousRegularSizeClassSecondaryViewSideContainerWidthEnum == .Set0 && isSecondaryViewShowing {
-            previousRegularSizeClassSecondaryViewSideContainerWidthEnum = .Set320
+        if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact && previousRegularSizeSecondaryViewSideContainerWidthEnum == .Set0 && isSecondaryViewShowing {
+            previousRegularSizeSecondaryViewSideContainerWidthEnum = .Set320
         }
         
         // Close the secondary view if we're changing from compact to regular or regular to compact
@@ -283,7 +283,7 @@ public class PaneViewController: UIViewController {
         
         // If we're going back to Regular from Compact, restore the secondary view width enum
         if newCollection.horizontalSizeClass == .Regular && traitCollection.horizontalSizeClass == .Compact {
-            updateSecondaryViewSideBySideConstraintForEnum(previousRegularSizeClassSecondaryViewSideContainerWidthEnum)
+            updateSecondaryViewSideBySideConstraintForEnum(previousRegularSizeSecondaryViewSideContainerWidthEnum)
         }
     }
     
@@ -323,7 +323,12 @@ public class PaneViewController: UIViewController {
                 }
             }
         case .Changed:
-            guard touchStartedDownInHandle else { return }
+            guard touchStartedDownInHandle else {
+                // Cancel the recognition
+                gestureRecognizer.enabled = false
+                gestureRecognizer.enabled = true
+                return
+            }
             
             let location = gestureRecognizer.locationInView(view)
             switch presentationMode {

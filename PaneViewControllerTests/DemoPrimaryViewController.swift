@@ -19,7 +19,7 @@ class DemoPrimaryViewController: UIViewController {
         
         title = "Primary View"
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Show", style: .Plain, target: self, action: "showSecondaryView")
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Show", style: .Plain, target: self, action: #selector(showSecondaryView))
         
         view.backgroundColor = colors[colorIndex]
     }

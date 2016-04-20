@@ -15,7 +15,7 @@ class DemoSecondaryViewController: UIViewController {
         
         title = "Secondary View"
 
-        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "X", style: .Plain, target: self, action: "hideSecondaryView")
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "X", style: .Plain, target: self, action: #selector(hideSecondaryView))
         
         view.backgroundColor = UIColor.redColor()
     }
