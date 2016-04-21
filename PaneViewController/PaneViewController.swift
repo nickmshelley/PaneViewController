@@ -293,6 +293,14 @@ public class PaneViewController: UIViewController {
         updateSizeClassOfChildViewControllers()
     }
     
+    public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+        
+        coordinator.animateAlongsideTransition({ _ in
+            self.updateSizeClassOfChildViewControllers()
+        }, completion: nil)
+    }
+    
     func panGestureRecognized(gestureRecognizer: UIPanGestureRecognizer) {
         switch gestureRecognizer.state {
         case .Began:
