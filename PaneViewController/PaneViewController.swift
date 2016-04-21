@@ -293,6 +293,14 @@ public class PaneViewController: UIViewController {
         updateSizeClassOfChildViewControllers()
     }
     
+    public override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
+        
+        coordinator.animateAlongsideTransition({ _ in
+            self.updateSizeClassOfChildViewControllers()
+            }, completion: nil)
+    }
+    
     func panGestureRecognized(gestureRecognizer: UIPanGestureRecognizer) {
         switch gestureRecognizer.state {
         case .Began:
@@ -490,9 +498,15 @@ public class PaneViewController: UIViewController {
         // If self is Compact, the child controllers are all Compact
         switch traitCollection.horizontalSizeClass {
         case .Regular:
-            // This value seemed to be a good one on iPad to choose when subviews should be compact or not
-            setOverrideTraitCollection(primaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: primaryViewController)
-            setOverrideTraitCollection(secondaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: secondaryViewController)
+            if traitCollection.verticalSizeClass == .Compact {
+                // For iPhone 6 plus
+                setOverrideTraitCollection(regularTraitCollection, forChildViewController: primaryViewController)
+                setOverrideTraitCollection(regularTraitCollection, forChildViewController: secondaryViewController)
+            } else {
+                // This value seemed to be a good one on iPad to choose when subviews should be compact or not
+                setOverrideTraitCollection(primaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: primaryViewController)
+                setOverrideTraitCollection(secondaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: secondaryViewController)
+            }
         case .Compact, .Unspecified:
             setOverrideTraitCollection(compactTraitCollection, forChildViewController: primaryViewController)
             setOverrideTraitCollection(compactTraitCollection, forChildViewController: secondaryViewController)
