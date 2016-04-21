@@ -298,7 +298,7 @@ public class PaneViewController: UIViewController {
         
         coordinator.animateAlongsideTransition({ _ in
             self.updateSizeClassOfChildViewControllers()
-            }, completion: nil)
+        }, completion: nil)
     }
     
     func panGestureRecognized(gestureRecognizer: UIPanGestureRecognizer) {
