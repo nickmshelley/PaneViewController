@@ -498,15 +498,9 @@ public class PaneViewController: UIViewController {
         // If self is Compact, the child controllers are all Compact
         switch traitCollection.horizontalSizeClass {
         case .Regular:
-            if traitCollection.verticalSizeClass == .Compact {
-                // For iPhone 6 plus
-                setOverrideTraitCollection(regularTraitCollection, forChildViewController: primaryViewController)
-                setOverrideTraitCollection(regularTraitCollection, forChildViewController: secondaryViewController)
-            } else {
-                // This value seemed to be a good one on iPad to choose when subviews should be compact or not
-                setOverrideTraitCollection(primaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: primaryViewController)
-                setOverrideTraitCollection(secondaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: secondaryViewController)
-            }
+            // This value seemed to be a good one on iPad to choose when subviews should be compact or not
+            setOverrideTraitCollection(primaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: primaryViewController)
+            setOverrideTraitCollection(secondaryViewController.view.bounds.width >= 500 ? regularTraitCollection : compactTraitCollection, forChildViewController: secondaryViewController)
         case .Compact, .Unspecified:
             setOverrideTraitCollection(compactTraitCollection, forChildViewController: primaryViewController)
             setOverrideTraitCollection(compactTraitCollection, forChildViewController: secondaryViewController)
