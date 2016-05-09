@@ -1,10 +1,12 @@
 PODS:
-  - Swiftification (5.3.0)
+  - Swiftification (5.3.2)
 
 DEPENDENCIES:
   - Swiftification
 
 SPEC CHECKSUMS:
-  Swiftification: be032aa7435a457d4ddf2110589741c3c636d2b8
+  Swiftification: c17533de2d3fdc147c41a084ceeb38f779016f8c
 
-COCOAPODS: 0.39.0
+PODFILE CHECKSUM: 6b62326997c6eb10a3ad41b42f2cc00f274df892
+
+COCOAPODS: 1.0.0.rc.2

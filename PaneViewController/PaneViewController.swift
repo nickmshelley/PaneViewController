@@ -43,6 +43,7 @@ public class PaneViewController: UIViewController {
     public var primaryViewToBlur: UIView?
     public var secondaryViewToBlur: UIView?
     public var shouldBlurWhenSideBySideResizes = true
+    public var shouldAllowDragModal = true
     public var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
         didSet {
             if isViewLoaded() {
@@ -304,6 +305,9 @@ public class PaneViewController: UIViewController {
     func panGestureRecognized(gestureRecognizer: UIPanGestureRecognizer) {
         switch gestureRecognizer.state {
         case .Began:
+            // Ignore if they're moving up/down too much
+            guard abs(gestureRecognizer.velocityInView(view).y) < abs(gestureRecognizer.velocityInView(view).x) else { break }
+            
             touchStartedWithSecondaryOpen = isSecondaryViewShowing
             
             switch presentationMode {
@@ -318,7 +322,8 @@ public class PaneViewController: UIViewController {
                     blurIfNeeded()
                 }
             case .Modal:
-                if modalHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) {
+                if modalHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) ||
+                    (shouldAllowDragModal && secondaryViewModalContainerView.frame.contains(gestureRecognizer.locationInView(view))) {
                     // This allows the view to be dragged onto the screen from the right
                     if !isSecondaryViewShowing {
                         isSecondaryViewShowing = true
@@ -402,13 +407,13 @@ public class PaneViewController: UIViewController {
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = modalShadowViewAlpha
-        }) { _ in
+        }, completion: { _ in
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
-        }
+        })
     }
     
     override public func dismissSecondaryViewAnimated(animated: Bool) {
@@ -430,14 +435,14 @@ public class PaneViewController: UIViewController {
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = 0
-        }) { _ in
+        }, completion: { _ in
             self.modalShadowImageView.alpha = 0
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
-        }
+        })
     }
     
     private func blurIfNeeded() {
@@ -549,11 +554,11 @@ public class PaneViewController: UIViewController {
         
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
-        }) { _ in
+        }, completion: { _ in
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
-        }
+        })
     }
     
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
