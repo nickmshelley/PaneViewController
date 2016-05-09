@@ -306,8 +306,7 @@ public class PaneViewController: UIViewController {
         switch gestureRecognizer.state {
         case .Began:
             // Ignore if they're moving up/down too much
-            let yVelocity = gestureRecognizer.velocityInView(view).y
-            guard abs(yVelocity) < 5 else { break }
+            guard abs(gestureRecognizer.velocityInView(view).y) < abs(gestureRecognizer.velocityInView(view).x) else { break }
             
             touchStartedWithSecondaryOpen = isSecondaryViewShowing
             
@@ -408,13 +407,13 @@ public class PaneViewController: UIViewController {
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = modalShadowViewAlpha
-        }) { _ in
+        }, completion: { _ in
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
-        }
+        })
     }
     
     override public func dismissSecondaryViewAnimated(animated: Bool) {
@@ -436,14 +435,14 @@ public class PaneViewController: UIViewController {
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
             self.modalShadowView.alpha = 0
-        }) { _ in
+        }, completion: { _ in
             self.modalShadowImageView.alpha = 0
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             if startingHorizontalSizeClass == .Regular {
                 self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
             }
-        }
+        })
     }
     
     private func blurIfNeeded() {
@@ -555,11 +554,11 @@ public class PaneViewController: UIViewController {
         
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
-        }) { _ in
+        }, completion: { _ in
             self.removeBlurIfNeeded()
             self.updateSizeClassOfChildViewControllers()
             self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
-        }
+        })
     }
     
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
