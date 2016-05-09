@@ -43,6 +43,7 @@ public class PaneViewController: UIViewController {
     public var primaryViewToBlur: UIView?
     public var secondaryViewToBlur: UIView?
     public var shouldBlurWhenSideBySideResizes = true
+    public var shouldAllowDragModal = true
     public var handleColor = UIColor(colorLiteralRed: 197.0 / 255.0, green: 197.0 / 255.0, blue: 197.0 / 255.0, alpha: 0.5) {
         didSet {
             if isViewLoaded() {
@@ -304,6 +305,10 @@ public class PaneViewController: UIViewController {
     func panGestureRecognized(gestureRecognizer: UIPanGestureRecognizer) {
         switch gestureRecognizer.state {
         case .Began:
+            // Ignore if they're moving up/down too much
+            let yVelocity = gestureRecognizer.velocityInView(view).y
+            guard abs(yVelocity) < 5 else { break }
+            
             touchStartedWithSecondaryOpen = isSecondaryViewShowing
             
             switch presentationMode {
@@ -318,7 +323,8 @@ public class PaneViewController: UIViewController {
                     blurIfNeeded()
                 }
             case .Modal:
-                if modalHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) {
+                if modalHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) ||
+                    (shouldAllowDragModal && secondaryViewModalContainerView.frame.contains(gestureRecognizer.locationInView(view))) {
                     // This allows the view to be dragged onto the screen from the right
                     if !isSecondaryViewShowing {
                         isSecondaryViewShowing = true
