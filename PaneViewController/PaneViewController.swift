@@ -414,6 +414,7 @@ public class PaneViewController: UIViewController {
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
             updateSecondaryViewSideBySideConstraintForEnum(.Set320)
         case .Compact, .Unspecified:
+            primaryViewController.view.addSubview(modalShadowView)
             modalShadowViewAlpha = 1
             secondaryViewModalContainerShowingLeadingConstraint?.constant = secondaryViewModalContainerOpenLocation
             secondaryViewModalContainerHiddenLeadingConstraint?.active = false
