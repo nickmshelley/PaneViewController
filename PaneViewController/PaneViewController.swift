@@ -71,6 +71,14 @@ public class PaneViewController: UIViewController {
         panGestureRecognizer.delegate = self
         return panGestureRecognizer
     }()
+    public lazy var moduleShadowCloseTapGestureRecognizer: UITapGestureRecognizer = {
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGestureRecognized))
+        return tapGestureRecognizer
+    }()
+    public lazy var moduleHandleCloseTapGestureRecognizer: UITapGestureRecognizer = {
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGestureRecognized))
+        return tapGestureRecognizer
+    }()
     
     private let modalOpenGap = CGFloat(20)
     
@@ -102,7 +110,6 @@ public class PaneViewController: UIViewController {
         shadowView.alpha = 0
         shadowView.backgroundColor = self.modalShadowColor
         shadowView.translatesAutoresizingMaskIntoConstraints = false
-        shadowView.userInteractionEnabled = false
         return shadowView
     }()
     private lazy var modalShadowImageView: UIImageView = {
@@ -241,6 +248,8 @@ public class PaneViewController: UIViewController {
         updateSizeClassOfChildViewControllers()
         
         view.addGestureRecognizer(panGestureRecognizer)
+        modalShadowView.addGestureRecognizer(moduleShadowCloseTapGestureRecognizer)
+        modalHandleTouchView.addGestureRecognizer(moduleHandleCloseTapGestureRecognizer)
     }
     
     public override func viewDidLayoutSubviews() {
@@ -377,6 +386,15 @@ public class PaneViewController: UIViewController {
             
             touchStartedDownInHandle = false
         case .Possible:
+            break
+        }
+    }
+    
+    func tapGestureRecognized(gestureRecognizer: UITapGestureRecognizer) {
+        switch gestureRecognizer.state {
+        case .Ended:
+            dismissSecondaryViewAnimated(true)
+        case _:
             break
         }
     }
