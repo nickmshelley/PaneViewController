@@ -71,11 +71,11 @@ public class PaneViewController: UIViewController {
         panGestureRecognizer.delegate = self
         return panGestureRecognizer
     }()
-    public lazy var moduleShadowCloseTapGestureRecognizer: UITapGestureRecognizer = {
+    public lazy var modalShadowCloseTapGestureRecognizer: UITapGestureRecognizer = {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGestureRecognized))
         return tapGestureRecognizer
     }()
-    public lazy var moduleHandleCloseTapGestureRecognizer: UITapGestureRecognizer = {
+    public lazy var modalHandleCloseTapGestureRecognizer: UITapGestureRecognizer = {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapGestureRecognized))
         return tapGestureRecognizer
     }()
@@ -248,8 +248,8 @@ public class PaneViewController: UIViewController {
         updateSizeClassOfChildViewControllers()
         
         view.addGestureRecognizer(panGestureRecognizer)
-        modalShadowView.addGestureRecognizer(moduleShadowCloseTapGestureRecognizer)
-        modalHandleTouchView.addGestureRecognizer(moduleHandleCloseTapGestureRecognizer)
+        modalShadowView.addGestureRecognizer(modalShadowCloseTapGestureRecognizer)
+        modalHandleTouchView.addGestureRecognizer(modalHandleCloseTapGestureRecognizer)
     }
     
     public override func viewDidLayoutSubviews() {
