@@ -325,6 +325,7 @@ public class PaneViewController: UIViewController {
                     primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
                     touchStartedDownInHandle = true
                     secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
+                    primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
                     secondaryViewSideContainerDraggingWidthConstraint?.active = true
                     secondaryViewSideContainerCurrentWidthConstraint?.active = false
                     
@@ -369,7 +370,6 @@ public class PaneViewController: UIViewController {
                 secondaryViewSideContainerDraggingWidthConstraint?.active = false
                 secondaryViewSideContainerCurrentWidthConstraint?.active = true
                 moveSideViewToPredeterminedPositionClosestToWidthAnimated(true)
-                primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
             case .Modal:
                 // If they tapped or dragged past the first quarter of the screen (if secondary was open) or drag only to the first quarter of the screen (if secondary started closed), close (again)
                 let dragVelocity = gestureRecognizer.velocityInView(view).x
