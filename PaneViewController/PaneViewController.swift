@@ -356,6 +356,7 @@ public class PaneViewController: UIViewController {
             switch presentationMode {
             case .SideBySide:
                 secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
+                primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
             case .Modal:
                 secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap, secondaryViewModalContainerOpenLocation)
                 modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
@@ -368,6 +369,7 @@ public class PaneViewController: UIViewController {
                 secondaryViewSideContainerDraggingWidthConstraint?.active = false
                 secondaryViewSideContainerCurrentWidthConstraint?.active = true
                 moveSideViewToPredeterminedPositionClosestToWidthAnimated(true)
+                primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
             case .Modal:
                 // If they tapped or dragged past the first quarter of the screen (if secondary was open) or drag only to the first quarter of the screen (if secondary started closed), close (again)
                 let dragVelocity = gestureRecognizer.velocityInView(view).x
@@ -388,7 +390,7 @@ public class PaneViewController: UIViewController {
         case .Possible:
             break
         }
-        primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
+        
     }
     
     func tapGestureRecognized(gestureRecognizer: UITapGestureRecognizer) {
