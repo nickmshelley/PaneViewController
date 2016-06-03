@@ -390,7 +390,6 @@ public class PaneViewController: UIViewController {
         case .Possible:
             break
         }
-        
     }
     
     func tapGestureRecognized(gestureRecognizer: UITapGestureRecognizer) {
