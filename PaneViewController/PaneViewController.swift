@@ -388,6 +388,7 @@ public class PaneViewController: UIViewController {
         case .Possible:
             break
         }
+        primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
     }
     
     func tapGestureRecognized(gestureRecognizer: UITapGestureRecognizer) {
