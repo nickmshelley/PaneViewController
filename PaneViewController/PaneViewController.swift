@@ -325,6 +325,7 @@ public class PaneViewController: UIViewController {
                     primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
                     touchStartedDownInHandle = true
                     secondaryViewSideContainerDraggingWidthConstraint?.constant = secondaryViewSideContainerView.bounds.width
+                    primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
                     secondaryViewSideContainerDraggingWidthConstraint?.active = true
                     secondaryViewSideContainerCurrentWidthConstraint?.active = false
                     
@@ -356,6 +357,7 @@ public class PaneViewController: UIViewController {
             switch presentationMode {
             case .SideBySide:
                 secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
+                primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
             case .Modal:
                 secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap, secondaryViewModalContainerOpenLocation)
                 modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
