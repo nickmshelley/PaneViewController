@@ -80,7 +80,7 @@ public class PaneViewController: UIViewController {
         return tapGestureRecognizer
     }()
     
-    private let modalOpenGap = CGFloat(20)
+    public var modalOpenGap = CGFloat(20)
     
     private var touchStartedDownInHandle = false
     private var touchStartedWithSecondaryOpen = false
