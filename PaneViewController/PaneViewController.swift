@@ -37,6 +37,7 @@ public class PaneViewController: UIViewController {
     public let secondaryViewController: UIViewController
     public let primaryViewWillChangeWidthObservers = ObserverSet<UIView>()
     public let primaryViewDidChangeWidthObservers = ObserverSet<UIView>()
+    public weak var delegate: PaneViewControllerDelegate?
     
     public private(set) var presentationMode = PresentationMode.Modal
     public private(set) var isSecondaryViewShowing = false
@@ -319,6 +320,8 @@ public class PaneViewController: UIViewController {
             
             touchStartedWithSecondaryOpen = isSecondaryViewShowing
             
+            delegate?.paneViewControllerDidStartPanning(self)
+            
             switch presentationMode {
             case .SideBySide:
                 if sideHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) {
@@ -364,6 +367,8 @@ public class PaneViewController: UIViewController {
             }
         case .Ended, .Failed, .Cancelled:
             guard touchStartedDownInHandle else { return }
+            
+            delegate?.paneViewControllerDidFinishPanning(self)
             
             switch presentationMode {
             case .SideBySide:
@@ -635,5 +640,12 @@ extension PaneViewController: UIGestureRecognizerDelegate {
     public func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
+    
+}
+
+public protocol PaneViewControllerDelegate: class {
+    
+    func paneViewControllerDidStartPanning(paneViewController: PaneViewController)
+    func paneViewControllerDidFinishPanning(paneViewController: PaneViewController)
     
 }
