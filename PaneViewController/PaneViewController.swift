@@ -93,6 +93,7 @@ public class PaneViewController: UIViewController {
     private var secondaryViewModalContainerOpenLocation = CGFloat(0)
     private var secondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
     private var previousRegularSizeSecondaryViewSideContainerWidthEnum = PredeterminedWidth.Set0
+    private var modalStartLocationX: CGFloat?
     
     private lazy var secondaryViewSideContainerView: UIView = {
         let containerView = UIView()
@@ -335,6 +336,8 @@ public class PaneViewController: UIViewController {
                     blurIfNeeded()
                 }
             case .Modal:
+                modalStartLocationX = gestureRecognizer.locationInView(secondaryViewController.view).x
+                
                 if modalHandleTouchView.frame.contains(gestureRecognizer.locationInView(view)) ||
                     (shouldAllowDragModal && secondaryViewModalContainerView.frame.contains(gestureRecognizer.locationInView(view))) {
                     // This allows the view to be dragged onto the screen from the right
@@ -357,19 +360,20 @@ public class PaneViewController: UIViewController {
             }
             
             let location = gestureRecognizer.locationInView(view)
+            let locationInSecondaryView = gestureRecognizer.locationInView(secondaryViewController.view)
             switch presentationMode {
             case .SideBySide:
                 secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
                 primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
             case .Modal:
-                secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap, secondaryViewModalContainerOpenLocation)
+                secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap - (modalStartLocationX ?? 0), secondaryViewModalContainerOpenLocation)
                 modalShadowView.alpha = 1.0 - (location.x / view.bounds.width)
             }
         case .Ended, .Failed, .Cancelled:
             guard touchStartedDownInHandle else { return }
             
             delegate?.paneViewControllerDidFinishPanning(self)
-            
+            modalStartLocationX = nil
             switch presentationMode {
             case .SideBySide:
                 secondaryViewSideContainerDraggingWidthConstraint?.active = false
