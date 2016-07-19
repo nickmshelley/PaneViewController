@@ -33,6 +33,8 @@ public class PaneViewController: UIViewController {
         case Modal
     }
     
+    private let minimumWidth: CGFloat = 320
+    
     public let primaryViewController: UIViewController
     public let secondaryViewController: UIViewController
     public let primaryViewWillChangeWidthObservers = ObserverSet<UIView>()
@@ -85,6 +87,9 @@ public class PaneViewController: UIViewController {
     
     private var touchStartedDownInHandle = false
     private var touchStartedWithSecondaryOpen = false
+    
+    private var secondaryViewContainerTrailingConstraint: NSLayoutConstraint?
+    
     private var secondaryViewSideContainerCurrentWidthConstraint: NSLayoutConstraint?
     private var secondaryViewSideContainerDraggingWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerHiddenLeadingConstraint: NSLayoutConstraint?
@@ -206,7 +211,7 @@ public class PaneViewController: UIViewController {
         primaryViewController.view.addSubview(modalShadowView)
         
         let views = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView, "sideHandleView": sideHandleView, "modalShadowView": modalShadowView, "sideHandleTouchView": sideHandleTouchView, "modalHandleTouchView": modalHandleTouchView]
-        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
+        view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("|[primaryView][secondaryViewSideContainerView]", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[secondaryViewModalContainerView]|", options: [], metrics: nil, views: views))
@@ -219,6 +224,11 @@ public class PaneViewController: UIViewController {
         primaryViewController.view.addConstraints(NSLayoutConstraint.constraintsWithVisualFormat("V:|[modalShadowView]|", options: [], metrics: nil, views: views))
         
         secondaryViewSideContainerView.addSubview(sideHandleView)
+        
+        let secondaryViewContainerTrailingConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Trailing, relatedBy: .Equal, toItem: view, attribute: .Trailing, multiplier: 1, constant: 0)
+        view.addConstraint(secondaryViewContainerTrailingConstraint)
+        self.secondaryViewContainerTrailingConstraint = secondaryViewContainerTrailingConstraint
+        
         let secondaryViewSideContainerWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 0)
         secondaryViewSideContainerView.addConstraint(secondaryViewSideContainerWidthConstraint)
         self.secondaryViewSideContainerDraggingWidthConstraint = secondaryViewSideContainerWidthConstraint
@@ -363,7 +373,14 @@ public class PaneViewController: UIViewController {
             let locationInSecondaryView = gestureRecognizer.locationInView(secondaryViewController.view)
             switch presentationMode {
             case .SideBySide:
-                secondaryViewSideContainerDraggingWidthConstraint?.constant = abs(location.x - view.bounds.width)
+                let newConstant = abs(location.x - view.bounds.width)
+                
+                if newConstant < minimumWidth {
+                    secondaryViewContainerTrailingConstraint?.constant = -newConstant + minimumWidth
+                    secondaryViewSideContainerDraggingWidthConstraint?.constant = minimumWidth
+                } else {
+                    secondaryViewSideContainerDraggingWidthConstraint?.constant = newConstant
+                }
                 primaryViewDidChangeWidthObservers.notify(primaryViewController.view)
             case .Modal:
                 secondaryViewModalContainerShowingLeadingConstraint?.constant = max(location.x - modalOpenGap - (modalStartLocationX ?? 0), secondaryViewModalContainerOpenLocation)
@@ -558,12 +575,13 @@ public class PaneViewController: UIViewController {
             view.addConstraint(newSideSecondaryViewWidthConstraint)
         case .Set320:
             isSecondaryViewShowing = true
-            newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 320)
+            newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: minimumWidth)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
         case .Set0:
             isSecondaryViewShowing = false
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 0)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
+            secondaryViewContainerTrailingConstraint?.constant = 0
         }
         
         secondaryViewSideContainerCurrentWidthConstraint = newSideSecondaryViewWidthConstraint
@@ -571,7 +589,13 @@ public class PaneViewController: UIViewController {
     
     private func moveSideViewToPredeterminedPositionClosestToWidthAnimated(animated: Bool) {
         let fullWidth = view.bounds.width
-        let currentWidth = secondaryViewSideContainerView.bounds.width
+        let currentWidth: CGFloat = {
+            if secondaryViewContainerTrailingConstraint?.active == true {
+                return minimumWidth - (secondaryViewContainerTrailingConstraint?.constant ?? minimumWidth)
+            } else {
+                return secondaryViewSideContainerView.bounds.width
+            }
+        }()
         let predeterminedWidthEnums: [PredeterminedWidth] = [.Half, .Set320, .Set0]
         var bestPredeterminedWidthEnum = PredeterminedWidth.Set0
         for possibleWidthEnum in predeterminedWidthEnums {
@@ -589,6 +613,7 @@ public class PaneViewController: UIViewController {
             self.updateSizeClassOfChildViewControllers()
             self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         })
+        
     }
     
     private func updateSecondaryViewLocationForTraitCollection(traitCollection: UITraitCollection) {
