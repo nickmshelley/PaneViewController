@@ -608,10 +608,10 @@ public class PaneViewController: UIViewController {
         
         UIView.animateWithDuration(animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()
-            }, completion: { _ in
-                self.removeBlurIfNeeded()
-                self.updateSizeClassOfChildViewControllers()
-                self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
+        }, completion: { _ in
+            self.removeBlurIfNeeded()
+            self.updateSizeClassOfChildViewControllers()
+            self.primaryViewDidChangeWidthObservers.notify(self.primaryViewController.view)
         })
         
     }
