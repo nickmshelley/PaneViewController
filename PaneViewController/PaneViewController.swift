@@ -33,6 +33,8 @@ public class PaneViewController: UIViewController {
         case Modal
     }
     
+    private let minimumWidth: CGFloat = 320
+    
     public let primaryViewController: UIViewController
     public let secondaryViewController: UIViewController
     public let primaryViewWillChangeWidthObservers = ObserverSet<UIView>()
@@ -379,11 +381,11 @@ public class PaneViewController: UIViewController {
             case .SideBySide:
                 let newConstant = abs(location.x - view.bounds.width)
                 
-                if newConstant < 320 {
+                if newConstant < minimumWidth {
                     secondaryViewContainerTrailingEqualConstraint?.active = false
                     secondaryViewContainerTrailingNotEqualConstraint?.active = true
-                    secondaryViewContainerTrailingNotEqualConstraint?.constant = -newConstant + 320
-                    secondaryViewSideContainerDraggingWidthConstraint?.constant = 320
+                    secondaryViewContainerTrailingNotEqualConstraint?.constant = -newConstant + minimumWidth
+                    secondaryViewSideContainerDraggingWidthConstraint?.constant = minimumWidth
                 } else {
                     secondaryViewSideContainerDraggingWidthConstraint?.constant = newConstant
                     secondaryViewContainerTrailingNotEqualConstraint?.active = false
@@ -583,13 +585,13 @@ public class PaneViewController: UIViewController {
             view.addConstraint(newSideSecondaryViewWidthConstraint)
         case .Set320:
             isSecondaryViewShowing = true
-            newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 320)
+            newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: minimumWidth)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
         case .Set0:
             isSecondaryViewShowing = false
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .Width, relatedBy: .Equal, toItem: nil, attribute: .NotAnAttribute, multiplier: 1, constant: 0)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
-            secondaryViewContainerTrailingNotEqualConstraint?.constant = 320
+            secondaryViewContainerTrailingNotEqualConstraint?.constant = minimumWidth
         }
         
         secondaryViewSideContainerCurrentWidthConstraint = newSideSecondaryViewWidthConstraint
@@ -599,8 +601,7 @@ public class PaneViewController: UIViewController {
         let fullWidth = view.bounds.width
         let currentWidth: CGFloat = {
             if secondaryViewContainerTrailingNotEqualConstraint?.active == true {
-                
-                return 320 - (secondaryViewContainerTrailingNotEqualConstraint?.constant ?? 320)
+                return minimumWidth - (secondaryViewContainerTrailingNotEqualConstraint?.constant ?? minimumWidth)
             } else {
                 return secondaryViewSideContainerView.bounds.width
             }
