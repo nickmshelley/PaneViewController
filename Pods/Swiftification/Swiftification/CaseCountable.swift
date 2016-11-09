@@ -22,14 +22,12 @@
 
 import Foundation
 
-public func < (lhs: NSDate, rhs: NSDate) -> Bool {
-    return lhs.compare(rhs) == .OrderedAscending
-}
+public protocol CaseCountable: RawRepresentable {}
 
-public func > (lhs: NSDate, rhs: NSDate) -> Bool {
-    return lhs.compare(rhs) == .OrderedDescending
-}
-
-public func == (lhs: NSDate, rhs: NSDate) -> Bool {
-    return lhs.compare(rhs) == .OrderedSame
+public extension CaseCountable where RawValue: Integer {
+    static var count: Int {
+        var i: RawValue = 0
+        while let new = Self(rawValue: i) { i = new.rawValue.advanced(by: 1) }
+        return Int(i.toIntMax())
+    }
 }

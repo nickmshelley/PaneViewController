@@ -10,16 +10,16 @@ import UIKit
 
 class DemoPrimaryViewController: UIViewController {
     
-    private let colors = [UIColor.greenColor(), UIColor.blackColor(), UIColor.orangeColor(), UIColor.purpleColor()]
+    fileprivate let colors = [UIColor.green, UIColor.black, UIColor.orange, UIColor.purple]
     
-    private var colorIndex = 0
+    fileprivate var colorIndex = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         title = "Primary View"
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Show", style: .Plain, target: self, action: #selector(showSecondaryView))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Show", style: .plain, target: self, action: #selector(showSecondaryView))
         
         view.backgroundColor = colors[colorIndex]
     }
@@ -28,8 +28,8 @@ class DemoPrimaryViewController: UIViewController {
         showSecondaryViewAnimated(true)
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        super.touchesBegan(touches, withEvent: event)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
         
         colorIndex += 1
         colorIndex %= colors.count

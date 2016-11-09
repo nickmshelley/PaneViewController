@@ -10,8 +10,8 @@ import UIKit
 
 public protocol PaneViewControllerProtocol {
     
-    func showSecondaryViewAnimated(animated: Bool)
-    func dismissSecondaryViewAnimated(animated: Bool)
+    func showSecondaryViewAnimated(_ animated: Bool)
+    func dismissSecondaryViewAnimated(_ animated: Bool)
     
 }
 
@@ -19,16 +19,16 @@ extension UIViewController: PaneViewControllerProtocol {
     
     public var paneViewController: PaneViewController? {
         get {
-            return self as? PaneViewController ?? parentViewController?.paneViewController
+            return self as? PaneViewController ?? parent?.paneViewController
         }
     }
     
-    public func showSecondaryViewAnimated(animated: Bool) {
-        parentViewController?.showSecondaryViewAnimated(animated)
+    public func showSecondaryViewAnimated(_ animated: Bool) {
+        parent?.showSecondaryViewAnimated(animated)
     }
     
-    public func dismissSecondaryViewAnimated(animated: Bool) {
-        parentViewController?.dismissSecondaryViewAnimated(animated)
+    public func dismissSecondaryViewAnimated(_ animated: Bool) {
+        parent?.dismissSecondaryViewAnimated(animated)
     }
     
 }

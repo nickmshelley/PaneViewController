@@ -10,7 +10,7 @@ import UIKit
 
 protocol HandleViewDelegate: class {
     
-    func hitTest(point: CGPoint, withEvent event: UIEvent?, inView: UIView) -> UIView?
+    func hitTest(_ point: CGPoint, withEvent event: UIEvent?, inView: UIView) -> UIView?
     
 }
 
@@ -18,10 +18,10 @@ class HandleView: UIView {
     
     weak var delegate: HandleViewDelegate?
     
-    override func hitTest(point: CGPoint, withEvent event: UIEvent?) -> UIView? {
-        guard userInteractionEnabled else { return nil }
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        guard isUserInteractionEnabled else { return nil }
         
-        return delegate?.hitTest(point, withEvent: event, inView: self) ?? super.hitTest(point, withEvent: event)
+        return delegate?.hitTest(point, withEvent: event, inView: self) ?? super.hitTest(point, with: event)
     }
     
 }
