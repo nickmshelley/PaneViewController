@@ -588,7 +588,7 @@ open class PaneViewController: UIViewController {
     private func moveSideViewToPredeterminedPositionClosestToWidthAnimated(_ animated: Bool) {
         let fullWidth = view.bounds.width
         let currentWidth: CGFloat = {
-            if secondaryViewContainerTrailingConstraint?.isActive == true {
+            if secondaryViewContainerTrailingConstraint?.isActive == true && secondaryViewContainerTrailingConstraint?.constant ?? 0 > minimumWidth / 2 {
                 return minimumWidth - (secondaryViewContainerTrailingConstraint?.constant ?? minimumWidth)
             } else {
                 return secondaryViewSideContainerView.bounds.width
