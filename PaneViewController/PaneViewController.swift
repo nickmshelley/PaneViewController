@@ -9,31 +9,35 @@
 import UIKit
 import Swiftification
 
-open class PaneViewController: UIViewController {
+@objc public enum PaneViewPinningState: Int {
+    case openDefault = 1
+    case openHalf = 2
+    case closed = 3
     
-    enum PredeterminedWidth {
-        case half
-        case set320
-        case set0
-        
-        func currentValueForFullWidth(_ fullWidth: CGFloat) -> CGFloat {
-            switch self {
-            case .half:
-                return fullWidth / 2.0
-            case .set320:
-                return 320
-            case .set0:
-                return 0
-            }
+    func paneViewWidth(forScreenWidth width: CGFloat) -> CGFloat {
+        switch self {
+        case .openDefault:
+            return PaneViewController.minimumWidth
+        case .openHalf:
+            return width / 2.0
+        case .closed:
+            return 0
         }
     }
+    
+    static func all() -> [PaneViewPinningState] {
+        return [.openDefault, .openHalf, .closed]
+    }
+}
+
+open class PaneViewController: UIViewController {
+    
+    fileprivate static let minimumWidth: CGFloat = 320
     
     public enum PresentationMode {
         case sideBySide
         case modal
     }
-    
-    private let minimumWidth: CGFloat = 320
     
     public let primaryViewController: UIViewController
     public let secondaryViewController: UIViewController
@@ -96,8 +100,8 @@ open class PaneViewController: UIViewController {
     private var secondaryViewModalContainerShowingLeadingConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerWidthConstraint: NSLayoutConstraint?
     private var secondaryViewModalContainerOpenLocation = CGFloat(0)
-    private var secondaryViewSideContainerWidthEnum = PredeterminedWidth.set0
-    private var previousRegularSizeSecondaryViewSideContainerWidthEnum = PredeterminedWidth.set0
+    private var paneViewPinningState = PaneViewPinningState.closed
+    private var previousPaneViewPinningState = PaneViewPinningState.closed
     private var modalStartLocationX: CGFloat?
     
     fileprivate lazy var secondaryViewSideContainerView: UIView = {
@@ -236,7 +240,7 @@ open class PaneViewController: UIViewController {
         secondaryViewSideContainerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "|[sideHandleView(==10)]", options: [], metrics: nil, views: views))
         secondaryViewSideContainerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[sideHandleView]|", options: [], metrics: nil, views: views))
         // We need a constraint for the width to make it off screen
-        updateSecondaryViewSideBySideConstraintForEnum(.set0)
+        updateSecondaryViewSideBySideConstraint(forPinningState: .closed)
         
         let secondaryViewModalContainerHiddenLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .leading, relatedBy: .equal, toItem: view, attribute: .trailing, multiplier: 1, constant: 0)
         let secondaryViewModalContainerShowingLeadingConstraint = NSLayoutConstraint(item: secondaryViewModalContainerView, attribute: .leading, relatedBy: .equal, toItem: view, attribute: .leading, multiplier: 1, constant: 0)
@@ -288,12 +292,12 @@ open class PaneViewController: UIViewController {
         
         // If they're going from Regular to Compact, save off the width enum so we can restore it if they go back
         if newCollection.horizontalSizeClass == .compact && traitCollection.horizontalSizeClass == .regular {
-            previousRegularSizeSecondaryViewSideContainerWidthEnum = secondaryViewSideContainerWidthEnum
+            previousPaneViewPinningState = paneViewPinningState
         }
         
         // We also want to show the default side view had they not had the side view showing, but did have the modal showing
-        if newCollection.horizontalSizeClass == .regular && traitCollection.horizontalSizeClass == .compact && previousRegularSizeSecondaryViewSideContainerWidthEnum == .set0 && isSecondaryViewShowing {
-            previousRegularSizeSecondaryViewSideContainerWidthEnum = .set320
+        if newCollection.horizontalSizeClass == .regular && traitCollection.horizontalSizeClass == .compact && previousPaneViewPinningState == .closed && isSecondaryViewShowing {
+            previousPaneViewPinningState = .openDefault
         }
         
         // Close the secondary view if we're changing from compact to regular or regular to compact
@@ -305,7 +309,7 @@ open class PaneViewController: UIViewController {
         
         // If we're going back to Regular from Compact, restore the secondary view width enum
         if newCollection.horizontalSizeClass == .regular && traitCollection.horizontalSizeClass == .compact {
-            updateSecondaryViewSideBySideConstraintForEnum(previousRegularSizeSecondaryViewSideContainerWidthEnum)
+            updateSecondaryViewSideBySideConstraint(forPinningState: previousPaneViewPinningState)
         }
     }
     
@@ -373,9 +377,9 @@ open class PaneViewController: UIViewController {
             case .sideBySide:
                 let newConstant = abs(location.x - view.bounds.width)
                 
-                if newConstant < minimumWidth {
-                    secondaryViewContainerTrailingConstraint?.constant = -newConstant + minimumWidth
-                    secondaryViewSideContainerDraggingWidthConstraint?.constant = minimumWidth
+                if newConstant < PaneViewController.minimumWidth {
+                    secondaryViewContainerTrailingConstraint?.constant = -newConstant + PaneViewController.minimumWidth
+                    secondaryViewSideContainerDraggingWidthConstraint?.constant = PaneViewController.minimumWidth
                 } else {
                     secondaryViewSideContainerDraggingWidthConstraint?.constant = newConstant
                 }
@@ -427,7 +431,7 @@ open class PaneViewController: UIViewController {
     
     // MARK: Methods
     
-    override public func showSecondaryViewAnimated(_ animated: Bool) {
+    override public func showSecondaryViewAnimated(_ animated: Bool, pinningState: PaneViewPinningState = .openDefault) {
         guard !isSecondaryViewShowing else { return }
         
         isSecondaryViewShowing = true
@@ -438,7 +442,7 @@ open class PaneViewController: UIViewController {
             modalShadowViewAlpha = 0
             blurIfNeeded()
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-            updateSecondaryViewSideBySideConstraintForEnum(.set320)
+            updateSecondaryViewSideBySideConstraint(forPinningState: pinningState)
         case .compact, .unspecified:
             primaryViewController.view.addSubview(modalShadowView)
             modalShadowViewAlpha = 1
@@ -470,7 +474,7 @@ open class PaneViewController: UIViewController {
         case .regular:
             blurIfNeeded()
             primaryViewWillChangeWidthObservers.notify(primaryViewController.view)
-            updateSecondaryViewSideBySideConstraintForEnum(.set0)
+            updateSecondaryViewSideBySideConstraint(forPinningState: .closed)
         case .compact, .unspecified:
             secondaryViewModalContainerShowingLeadingConstraint?.isActive = false
             secondaryViewModalContainerHiddenLeadingConstraint?.isActive = true
@@ -557,25 +561,25 @@ open class PaneViewController: UIViewController {
         }
     }
     
-    private func updateSecondaryViewSideBySideConstraintForEnum(_ predeterminedWidth: PredeterminedWidth) {
+    private func updateSecondaryViewSideBySideConstraint(forPinningState pinningState: PaneViewPinningState) {
         if let secondaryViewSideContainerCurrentWidthConstraint = secondaryViewSideContainerCurrentWidthConstraint {
             secondaryViewSideContainerView.removeConstraint(secondaryViewSideContainerCurrentWidthConstraint)
             view.removeConstraint(secondaryViewSideContainerCurrentWidthConstraint)
         }
         
-        secondaryViewSideContainerWidthEnum = predeterminedWidth
+        paneViewPinningState = pinningState
         
         let newSideSecondaryViewWidthConstraint: NSLayoutConstraint
-        switch predeterminedWidth {
-        case .half:
+        switch pinningState {
+        case .openHalf:
             isSecondaryViewShowing = true
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .width, relatedBy: .equal, toItem: primaryViewController.view, attribute: .width, multiplier: 1, constant: 0)
             view.addConstraint(newSideSecondaryViewWidthConstraint)
-        case .set320:
+        case .openDefault:
             isSecondaryViewShowing = true
-            newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: minimumWidth)
+            newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: PaneViewController.minimumWidth)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
-        case .set0:
+        case .closed:
             isSecondaryViewShowing = false
             newSideSecondaryViewWidthConstraint = NSLayoutConstraint(item: secondaryViewSideContainerView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: 0)
             secondaryViewSideContainerView.addConstraint(newSideSecondaryViewWidthConstraint)
@@ -588,21 +592,20 @@ open class PaneViewController: UIViewController {
     private func moveSideViewToPredeterminedPositionClosestToWidthAnimated(_ animated: Bool) {
         let fullWidth = view.bounds.width
         let currentWidth: CGFloat = {
-            if secondaryViewContainerTrailingConstraint?.isActive == true && secondaryViewContainerTrailingConstraint?.constant ?? 0 > minimumWidth / 2 {
-                return minimumWidth - (secondaryViewContainerTrailingConstraint?.constant ?? minimumWidth)
+            if secondaryViewContainerTrailingConstraint?.isActive == true && secondaryViewContainerTrailingConstraint?.constant ?? 0 > PaneViewController.minimumWidth / 2 {
+                return PaneViewController.minimumWidth - (secondaryViewContainerTrailingConstraint?.constant ?? PaneViewController.minimumWidth)
             } else {
                 return secondaryViewSideContainerView.bounds.width
             }
         }()
-        let predeterminedWidthEnums: [PredeterminedWidth] = [.half, .set320, .set0]
-        var bestPredeterminedWidthEnum = PredeterminedWidth.set0
-        for possibleWidthEnum in predeterminedWidthEnums {
-            if abs(currentWidth - bestPredeterminedWidthEnum.currentValueForFullWidth(fullWidth)) > abs(currentWidth - possibleWidthEnum.currentValueForFullWidth(fullWidth)) {
-                bestPredeterminedWidthEnum = possibleWidthEnum
+        var bestPinningState: PaneViewPinningState = .closed
+        for pinningState in PaneViewPinningState.all() {
+            if abs(currentWidth - bestPinningState.paneViewWidth(forScreenWidth: fullWidth)) > abs(currentWidth - pinningState.paneViewWidth(forScreenWidth: fullWidth)) {
+                bestPinningState = pinningState
             }
         }
         
-        updateSecondaryViewSideBySideConstraintForEnum(bestPredeterminedWidthEnum)
+        updateSecondaryViewSideBySideConstraint(forPinningState: bestPinningState)
         
         UIView.animate(withDuration: animated ? 0.3 : 0, animations: {
             self.view.layoutIfNeeded()

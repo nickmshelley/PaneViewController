@@ -10,7 +10,7 @@ import UIKit
 
 public protocol PaneViewControllerProtocol {
     
-    func showSecondaryViewAnimated(_ animated: Bool)
+    func showSecondaryViewAnimated(_ animated: Bool, pinningState: PaneViewPinningState)
     func dismissSecondaryViewAnimated(_ animated: Bool)
     
 }
@@ -23,8 +23,8 @@ extension UIViewController: PaneViewControllerProtocol {
         }
     }
     
-    public func showSecondaryViewAnimated(_ animated: Bool) {
-        parent?.showSecondaryViewAnimated(animated)
+    public func showSecondaryViewAnimated(_ animated: Bool, pinningState: PaneViewPinningState = .openDefault) {
+        parent?.showSecondaryViewAnimated(animated, pinningState: pinningState)
     }
     
     public func dismissSecondaryViewAnimated(_ animated: Bool) {
