@@ -277,7 +277,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0720;
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = "Intellectual Reserve, Inc";
 				TargetAttributes = {
 					ECA3324B1C7F62B7008D5F42 = {

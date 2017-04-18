@@ -8,6 +8,9 @@ disabled_rules: # rule identifiers to exclude from running
   - nesting
   - valid_docs
   - function_parameter_count
+  - large_tuple
+  - identifier_name
+
 opt_in_rules: # some rules are only opt-in
   - empty_count
   - force_unwrapping
@@ -16,22 +19,33 @@ excluded: # paths to ignore during linting. Takes precedence over `included`.
   - Pods
   - Vendor
   - build
+  - fastlane
 
 # configurable rules can be customized from this configuration file
 # binary rules can set their severity level
 force_cast: error
 force_try: error
 force_unwrapping: error
+trailing_newline: error
+comma: error
+colon: error
+opening_brace: error
+empty_count: error
+legacy_constructor: error
+statement_position: error
+legacy_constant: error
+trailing_semicolon: error
 variable_name:
   max_length:
     warning: 55
     error: 60
   min_length:
-    error: 4
+    error: 3
   excluded:
     - row
     - key
     - id
+    - ids
     - url
     - uri
     - db
@@ -44,56 +58,34 @@ variable_name:
     - URI
     - URL
     - tip
-trailing_newline: error
-comma: error
-colon: error
-opening_brace: error
-empty_count: error
-legacy_constructor: error
-statement_position: error
-legacy_constant: error
-trailing_semicolon: error
-
+    - moa
+    - day
+    - nib
 reporter: "xcode" # reporter type (xcode, json, csv, checkstyle)
 
 custom_rules:
    comments_space:
       name: "Space After Comment"
-      regex: "(^ *//\w+)"
+      regex: "(^ *//\\w+)"
       message: "There should be a space after //"
-      severity: error
+      severity: warning
    comments_capitalized_ignore_possible_code:
       name: "Capitalize First Word In Comment"
       regex: "(^ +// +(?!swiftlint)[a-z]+)"
       message: "The first word of a comment should be capitalized"
-      severity: error
+      severity: warning
    comments_capitalized_find_possible_code:
       name: "Catch Commented Out Code"
       regex: "(^ *// +(?!swiftlint)[a-z]+)"
       message: "The first word of a comment should be capitalized"
       severity: warning
-   empty_first_line:
-      name: "Empty First Line"
-      regex: "(^[ a-zA-Z ]*(?:protocol|extension|class|struct) (?!(?:var|let))[ a-zA-Z:]*\{\n *\S+)"
-      message: "There should be an empty line after a declaration"
-      severity: error
-   empty_line_after_guard:
-      name: "Empty Line After Guard"
-      regex: "(^ *guard[ a-zA-Z0-9=?.\(\),><!]*\{[ a-zA-Z0-9=?.\(\),><!]*\}\n *(?!(?:return|guard))\S+)"
-      message: "There should be an empty line after a guard"
-      severity: error
    empty_line_after_super:
       name: "Empty Line After Super"
-      regex: "(^ *super\.[ a-zA-Z0-9=?.\(\)\{\}:,><!]*\n *(?!(?:\}|return))\S+)"
+      regex: "(^ *super\\.[ a-zA-Z0-9=?.\\(\\)\\{\\}:,><!]*\n *(?!(?:\\}|return))\\S+)"
       message: "There should be an empty line after super"
       severity: error
    multiple_empty_lines:
       name: "Multiple Empty Lines"
-      regex: "((?:\s*\n){3,})"
+      regex: "((?:\\s*\n){3,})"
       message: "There are too many line breaks"
-      severity: error
-   unnecessary_type:
-      name: "Unnecessary Type"
-      regex: "[ a-zA-Z0-9]*(?:let|var) [ a-zA-Z0-9]*: ([a-zA-Z0-9]*)[\? ]*= \1"
-      message: "Type Definition Not Needed"
       severity: error

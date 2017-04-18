@@ -214,7 +214,7 @@ open class PaneViewController: UIViewController {
         
         primaryViewController.view.addSubview(modalShadowView)
         
-        let views = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView, "sideHandleView": sideHandleView, "modalShadowView": modalShadowView, "sideHandleTouchView": sideHandleTouchView, "modalHandleTouchView": modalHandleTouchView]
+        let views: [String: Any] = ["view": view, "primaryView": primaryViewController.view, "secondaryViewSideContainerView": secondaryViewSideContainerView, "secondaryViewModalContainerView": secondaryViewModalContainerView, "sideHandleView": sideHandleView, "modalShadowView": modalShadowView, "sideHandleTouchView": sideHandleTouchView, "modalHandleTouchView": modalHandleTouchView]
         view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "|[primaryView][secondaryViewSideContainerView]", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[primaryView]|", options: [], metrics: nil, views: views))
         view.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|[secondaryViewSideContainerView]|", options: [], metrics: nil, views: views))
@@ -634,7 +634,7 @@ open class PaneViewController: UIViewController {
             secondaryViewModalContainerView.addSubview(secondaryViewController.view)
             secondaryViewModalContainerView.addSubview(modalShadowImageView)
             
-            let views = ["secondaryView": secondaryViewController.view, "modalShadowImageView": modalShadowImageView]
+            let views: [String: Any] = ["secondaryView": secondaryViewController.view, "modalShadowImageView": modalShadowImageView]
             let metrics = ["modalOpenGap": modalOpenGap]
             secondaryViewModalContainerView.removeConstraints(modalShadowView.constraints)
             secondaryViewModalContainerView.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "[modalShadowImageView][secondaryView]|", options: [], metrics: nil, views: views))

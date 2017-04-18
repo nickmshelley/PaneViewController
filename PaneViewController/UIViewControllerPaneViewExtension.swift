@@ -18,9 +18,7 @@ public protocol PaneViewControllerProtocol {
 extension UIViewController: PaneViewControllerProtocol {
     
     public var paneViewController: PaneViewController? {
-        get {
-            return self as? PaneViewController ?? parent?.paneViewController
-        }
+        return self as? PaneViewController ?? parent?.paneViewController
     }
     
     public func showSecondaryViewAnimated(_ animated: Bool, pinningState: PaneViewPinningState = .openDefault) {
