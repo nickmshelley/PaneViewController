@@ -1,0 +1,10 @@
+sudo: false
+language: swift
+osx_image: xcode8.3
+
+before_install: 
+- pod install
+
+script:
+- xcodebuild clean build test -workspace PaneViewController.xcworkspace -scheme PaneViewController -sdk iphonesimulator -destination "name=iPhone 5s,platform=iOS Simulator" | xcpretty
+

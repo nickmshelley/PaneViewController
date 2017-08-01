@@ -1,5 +1,7 @@
 # Created by http://www.gitignore.io
 
+Pods
+
 ### Xcode ###
 build/
 *.pbxuser

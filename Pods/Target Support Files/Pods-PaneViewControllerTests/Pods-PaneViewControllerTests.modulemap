@@ -1,6 +1,0 @@
-framework module Pods_PaneViewControllerTests {
-  umbrella header "Pods-PaneViewControllerTests-umbrella.h"
-
-  export *
-  module * { export * }
-}

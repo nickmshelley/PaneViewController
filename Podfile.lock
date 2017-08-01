@@ -1,12 +1,12 @@
 PODS:
-  - Swiftification (7.0.0)
+  - Swiftification (9.2.1)
 
 DEPENDENCIES:
   - Swiftification
 
 SPEC CHECKSUMS:
-  Swiftification: 88670425db4ea4fdca822674ae655f76781f757e
+  Swiftification: 51f5e2d7241a5576186ffb940e75de367132ea2a
 
 PODFILE CHECKSUM: 6b62326997c6eb10a3ad41b42f2cc00f274df892
 
-COCOAPODS: 1.1.1
+COCOAPODS: 1.2.1
