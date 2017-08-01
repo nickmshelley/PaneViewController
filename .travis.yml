@@ -7,4 +7,5 @@ before_install:
 
 script:
 - xcodebuild clean build test -workspace PaneViewController.xcworkspace -scheme PaneViewController -sdk iphonesimulator -destination "name=iPhone 5s,platform=iOS Simulator" | xcpretty
+- pod lib lint --verbose
 
