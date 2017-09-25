@@ -8,11 +8,11 @@ A side drawer controller that toggles between modal and side by side view depend
                    DESC
   s.license      = { :type => 'MIT', :file => 'LICENSE' }
   s.author       = 'Branden Russell', 'Hilton Campbell', 'Stephan Heilner', 'Nick Shelley'
-  s.platform     = :ios, "8.0"
+  s.platform     = :ios, "9.0"
   s.source       = { :git => "https://github.com/CrossWaterBridge/PaneViewController.git", :tag => s.version.to_s }
   s.requires_arc = true
   s.source_files = "PaneViewController/*.{h,m,swift}"
   s.resources    = "Resources/PaneViewController.xcassets"
   s.framework    = "UIKit"
-  s.dependency "Swiftification"
+  s.dependency "ObserverSet"
 end
